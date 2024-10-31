@@ -3,17 +3,17 @@ from tkinter import ttk, messagebox
 from barcode import Code128
 from barcode.writer import ImageWriter
 import qrcode
-from reportlab.pdfgen import canvas 
-from reportlab.lib import colors 
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
 from reportlab.lib.pagesizes import landscape, A4
-from reportlab.lib.units import inch
 
 # Dark theme colors
-BACKGROUND_COLOR = "#2E2E2E" #gray
-TEXT_COLOR = "#FFFFFF"  #white
-BUTTON_COLOR = "#4A4A4A"    #dark gray
-HIGHLIGHT_COLOR = "#3E3E3E" #light gray
-ENTRY_COLOR = "#4A4A4A" #dark gray
+BACKGROUND_COLOR = "#2E2E2E"  # gray
+TEXT_COLOR = "#FFFFFF"   # white
+BUTTON_COLOR = "#4A4A4A"    # dark gray
+HIGHLIGHT_COLOR = "#3E3E3E"  # light gray
+ENTRY_COLOR = "#4A4A4A"  # dark gray
+
 
 def generate_barcode(input_string):
     try:
@@ -24,6 +24,7 @@ def generate_barcode(input_string):
     except Exception as e:
         messagebox.showerror("Error", str(e))
         return None
+
 
 def generate_qr_code(input_string):
     try:
@@ -39,49 +40,50 @@ def generate_qr_code(input_string):
         messagebox.showerror("Error", str(e))
         return None
 
+
 def generate_pdf(batch, date, concentration, volume, barcode_path, qr_code_path, page_size, text):
     fileName = 'output.pdf'
     documentTitle = 'Generated PDF'
-    
+
     # Paths for additional images
     logo = 'soFabLogo2.png'  # Update with the correct path
     flame = 'flame.png'      # Update with the correct path
 
-    # Creating a pdf object 
-    pdf = canvas.Canvas(fileName) 
+    # Creating a pdf object
+    pdf = canvas.Canvas(fileName)
     pdf.setPageSize(page_size)
-    pdf.setTitle(documentTitle) 
+    pdf.setTitle(documentTitle)
 
     pdf.rect(10, 25, 565, 245, stroke=1, fill=0)
 
     # Adding multiline text from the Text widget
     pdf.setFont("Helvetica", 16)
-    pdf.setFillColor(colors.black) 
+    pdf.setFillColor(colors.black)
     text_obj = pdf.beginText(20, 250)
     for line in text.splitlines():
         text_obj.textLine(line)
     pdf.drawText(text_obj)
 
     # Draw chemical info
-    pdf.setFont("Helvetica-Bold", 25) 
-    pdf.drawString(20, 350, 'Chemical Name:') 
-    pdf.setFont("Helvetica", 25) 
-    pdf.drawString(250, 350, batch) 
+    pdf.setFont("Helvetica-Bold", 25)
+    pdf.drawString(20, 350, 'Chemical Name:')
+    pdf.setFont("Helvetica", 25)
+    pdf.drawString(250, 350, batch)
 
-    pdf.setFont("Helvetica-Bold", 25) 
-    pdf.drawString(20, 300, 'Volume:') 
-    pdf.setFont("Helvetica", 25) 
-    pdf.drawString(250, 300, volume) 
+    pdf.setFont("Helvetica-Bold", 25)
+    pdf.drawString(20, 300, 'Volume:')
+    pdf.setFont("Helvetica", 25)
+    pdf.drawString(250, 300, volume)
 
-    pdf.setFont("Helvetica-Bold", 25) 
-    pdf.drawString(20, 450, 'Concentration:') 
-    pdf.setFont("Helvetica", 25) 
-    pdf.drawString(250, 300, concentration) 
+    pdf.setFont("Helvetica-Bold", 25)
+    pdf.drawString(20, 450, 'Concentration:')
+    pdf.setFont("Helvetica", 25)
+    pdf.drawString(250, 300, concentration)
 
-    pdf.setFont("Helvetica-Bold", 25) 
-    pdf.drawString(20, 400, 'Date Created:') 
-    pdf.setFont("Helvetica", 25) 
-    pdf.drawString(250, 400, date) 
+    pdf.setFont("Helvetica-Bold", 25)
+    pdf.drawString(20, 400, 'Date Created:')
+    pdf.setFont("Helvetica", 25)
+    pdf.drawString(250, 400, date)
 
     # Draw barcode and QR code images
     if barcode_path:
@@ -90,20 +92,23 @@ def generate_pdf(batch, date, concentration, volume, barcode_path, qr_code_path,
         pdf.drawInlineImage(qr_code_path, 645, 415, width=200, height=200)
 
     # Draw additional images (logo and flame)
-    pdf.drawInlineImage(logo, 0, 475, width=None, height=None, preserveAspectRatio=True) 
-    pdf.drawInlineImage(flame, 580, 30, width=250, height=300, preserveAspectRatio=True) 
+    pdf.drawInlineImage(logo, 0, 475, width=None, height=None,
+                        preserveAspectRatio=True)
+    pdf.drawInlineImage(flame, 580, 30, width=250, height=300,
+                        preserveAspectRatio=True)
 
     # Add precautions text
-    #pdf.setFont("Helvetica-Bold", 25) 
-    #pdf.drawString(20, 450, 'Precautions:') 
-    #pdf.setFont("Helvetica", 16)
-    #precaution_text_obj = pdf.beginText(20, 420)
-    #for line in precautions.splitlines():
-    #    precaution_text_obj.textLine(line)
-    #pdf.drawText(precaution_text_obj)
+    #  pdf.setFont("Helvetica-Bold", 25)
+    # pdf.drawString(20, 450, 'Precautions:')
+    # pdf.setFont("Helvetica", 16)
+    # precaution_text_obj = pdf.beginText(20, 420)
+    # for line in precautions.splitlines():
+    #     precaution_text_obj.textLine(line)
+    # pdf.drawText(precaution_text_obj)
 
-    # Saving the pdf 
+    # Saving the pdf
     pdf.save()
+
 
 def on_submit():
     batch = batch_entry.get()
@@ -115,14 +120,17 @@ def on_submit():
     qr_code_input = qr_code_entry.get()
     page_size_option = page_size_var.get()
     text = text_box.get("1.0", tk.END).strip()  # Get text from the Text widget
-    #precautions = precaution_box.get("1.0", tk.END).strip()  # Get precautions from the Text widget
+    # Get precautions from the Text widget
+    # precautions = precaution_box.get("1.0", tk.END).strip()
 
     # Set page size based on user selection
     page_size = landscape(A4) if page_size_option == "Landscape" else A4
 
     barcode_path = generate_barcode(barcode_input)
     qr_code_path = generate_qr_code(qr_code_input)
-    generate_pdf(batch, date, concentration, volume, barcode_path, qr_code_path, page_size, text)
+    generate_pdf(batch, date, concentration, volume, barcode_path,
+                 qr_code_path, page_size, text)
+
 
 # Set up GUI interface
 def setup_interface():
@@ -132,7 +140,7 @@ def setup_interface():
     global hazard_checkbox_vars, precaution_checkbox_vars
 
     notebook = ttk.Notebook(root)
-    
+
     # First tab for Chemical Details
     chemical_frame = ttk.Frame(notebook, style="TFrame")
     notebook.add(chemical_frame, text="Chemical Details")
@@ -190,11 +198,12 @@ def setup_interface():
     checkbox_frame = tk.Frame(hazard_frame, bg=BACKGROUND_COLOR)
     checkbox_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=5)
     # List to keep track of hazard checkbox variables
-    hazard_checkbox_vars = [] 
-    checkbox_vars = [] 
+    hazard_checkbox_vars = []
+    checkbox_vars = []
 
     # Function to update checkboxes when hazard type changes
-    hazard_type_var.trace_add("write", lambda *args: update_hazard_checkboxes(checkbox_frame))
+    hazard_type_var.trace_add("write",
+                              lambda *args: update_hazard_checkboxes(checkbox_frame))
 
     # Third tab for Precautionary Type
     precaution_frame = ttk.Frame(notebook)
@@ -203,24 +212,28 @@ def setup_interface():
     # Precautionary Type selection
     precaution_type_var = tk.StringVar(value="P1")  # Default value
     precaution_type_menu = tk.OptionMenu(precaution_frame, precaution_type_var,
-        "General precautionary statements (P1)", 
-        "Prevention precautionary statements (P2)", 
-        "Response precautionary statements (P3)", 
-        "Storage precautionary statements (P4)", 
-        "Disposal precautionary statements (P5)")
-    precaution_type_menu.config(bg=BUTTON_COLOR, fg=TEXT_COLOR, activebackground=HIGHLIGHT_COLOR)
+                                         "General precautionary statements (P1)",
+                                         "Prevention precautionary statements (P2)",
+                                         "Response precautionary statements (P3)",
+                                         "Storage precautionary statements (P4)",
+                                         "Disposal precautionary statements (P5)")
+
+    precaution_type_menu.config(bg=BUTTON_COLOR, fg=TEXT_COLOR,
+                                activebackground=HIGHLIGHT_COLOR)
     tk.Label(precaution_frame, text="Select Precautionary Type:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=0, column=0, padx=10, pady=5)
     precaution_type_menu.grid(row=0, column=1, padx=10, pady=5)
 
     # Precaution description text box
-    precaution_box = tk.Text(precaution_frame, height=5, width=40, bg=ENTRY_COLOR, fg=TEXT_COLOR, insertbackground=TEXT_COLOR)
+    precaution_box = tk.Text(precaution_frame, height=5, width=40,
+                             bg=ENTRY_COLOR, fg=TEXT_COLOR, insertbackground=TEXT_COLOR)
     precaution_box.grid(row=1, column=0, columnspan=2, padx=10, pady=5)
 
     # Frame for precautionary checkboxes
     precaution_checkbox_frame = tk.Frame(precaution_frame, bg=BACKGROUND_COLOR)
-    precaution_checkbox_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=5)
+    precaution_checkbox_frame.grid(row=2, column=0,
+                                   columnspan=2, padx=10, pady=5)
     # List to keep track of precaution checkbox variables
-    precaution_checkbox_vars = [] 
+    precaution_checkbox_vars = []
 
     # Generate PDF button
     # Generate PDF button
@@ -230,6 +243,8 @@ def setup_interface():
     precaution_type_var.trace_add("write", lambda *args: update_precautionary_checkboxes(precaution_checkbox_frame))
 
     notebook.pack(expand=True, fill='both')
+
+
 #######################################################################
 def update_hazard_checkboxes(checkbox_frame):
     global checkbox_vars  # Ensure we're using the global variable
@@ -463,6 +478,7 @@ def update_text_box():
             text += f"{label}\n"
     text_box.delete("1.0", tk.END)  # Clear the existing text
     text_box.insert(tk.END, text)  # Insert the updated text
+
 
 # Initialize main application
 root = tk.Tk()
