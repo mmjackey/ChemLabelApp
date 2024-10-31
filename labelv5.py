@@ -187,13 +187,26 @@ def setup_interface():
     page_size_menu = ttk.OptionMenu(chemical_frame, page_size_var, "Portrait", "Portrait", "Landscape")
     page_size_menu.grid(row=7, column=1, padx=10, pady=5)
     
-    # Stage selection
-    tk.Label(chemical_frame, text="Stage:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=8, column=0, padx=10, pady=5)
+    # Add to database checkbox
+    stage_frame = ttk.Frame(chemical_frame, borderwidth=0)
+    stage_frame.grid(row=9, column=0, columnspan=2, padx=10, pady=5)
+    tk.Label(stage_frame, text="Stage:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=0, column=0, padx=5, pady=5)
     stage_choice = tk.StringVar()
     options = ["Synthesis", "Washing"]
-    stage_entry = ttk.OptionMenu(chemical_frame, stage_choice, options[0], *options)
-    stage_entry.grid(row=8, column=1, padx=10, pady=5)
-    
+    stage_entry = ttk.OptionMenu(stage_frame, stage_choice, options[0], *options)
+    stage_entry.grid(row=0, column=1, padx=5, pady=5)
+    stage_frame.grid_forget()
+
+    def checkbox_checked():
+        if checkbox_var.get():
+            stage_frame.grid(row=9, column=0, columnspan=2, padx=10, pady=5)
+        else:
+            stage_frame.grid_forget()
+
+    checkbox_var = tk.BooleanVar()
+    checkbox = tk.Checkbutton(chemical_frame, text="Add to database", variable=checkbox_var, command=checkbox_checked)
+    checkbox.grid(row=8, column=0, padx=10, pady=5)
+
     # Second tab for Hazard Details
     hazard_frame = ttk.Frame(notebook)
     notebook.add(hazard_frame, text="Hazard Details")
@@ -580,6 +593,46 @@ def update_text_box():
 
 # Initialize main application
 root = tk.Tk()
+
+#Custom theme
+style = ttk.Style(root)
+# Define your color scheme
+WHITE = "#ffffff"
+GRAY = "#2E2E2E"
+D_GRAY = "#4A4A4A"
+L_GRAY = "#3E3E3E"
+ 
+style.theme_create(
+    "mytheme",
+    parent = "default",
+    settings = {
+        "TScrollbar": {
+            "configure": {
+                "background": GRAY,
+                "troughcolor": WHITE,
+                "lightcolor": L_GRAY,
+                "borderwidth": 1},
+            "map": {
+                "background": [("active", GRAY),
+                               ("disabled", L_GRAY)],
+                "arrowcolor": [("active", GRAY),
+                               ("disabled", L_GRAY)]}},
+        "TFrame": {
+                "configure": {
+                    "background": GRAY}},
+        "TNotebook": {
+            "configure":
+            {
+                "background": GRAY}},
+        "TNotebook.Tab": {
+            "configure":
+            {
+                "background": GRAY},
+            "map": {
+                "background": [("selected", GRAY)]}}})
+ 
+style.theme_use("mytheme")
+
 root.title("Chemical Hazard Generator")
 root.geometry("800x600")
 root['bg'] = BACKGROUND_COLOR
