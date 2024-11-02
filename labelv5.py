@@ -1,16 +1,17 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import messagebox, ttk
+
+import qrcode
 from barcode import Code128
 from barcode.writer import ImageWriter
-import qrcode
-from reportlab.pdfgen import canvas
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.pdfgen import canvas
 
 # Dark theme colors
 BACKGROUND_COLOR = "#2E2E2E"  # gray
-TEXT_COLOR = "#FFFFFF"   # white
-BUTTON_COLOR = "#4A4A4A"    # dark gray
+TEXT_COLOR = "#FFFFFF"  # white
+BUTTON_COLOR = "#4A4A4A"  # dark gray
 HIGHLIGHT_COLOR = "#3E3E3E"  # light gray
 ENTRY_COLOR = "#4A4A4A"  # dark gray
 
@@ -41,13 +42,22 @@ def generate_qr_code(input_string):
         return None
 
 
-def generate_pdf(batch, date, concentration, volume, barcode_path, qr_code_path, page_size, text):
-    fileName = 'output.pdf'
-    documentTitle = 'Generated PDF'
+def generate_pdf(
+    batch,
+    date,
+    concentration,
+    volume,
+    barcode_path,
+    qr_code_path,
+    page_size,
+    text,
+):
+    fileName = "output.pdf"
+    documentTitle = "Generated PDF"
 
     # Paths for additional images
-    logo = 'soFabLogo2.png'  # Update with the correct path
-    flame = 'flame.png'      # Update with the correct path
+    logo = "soFabLogo2.png"  # Update with the correct path
+    flame = "flame.png"  # Update with the correct path
 
     # Creating a pdf object
     pdf = canvas.Canvas(fileName)
@@ -66,22 +76,22 @@ def generate_pdf(batch, date, concentration, volume, barcode_path, qr_code_path,
 
     # Draw chemical info
     pdf.setFont("Helvetica-Bold", 25)
-    pdf.drawString(20, 350, 'Chemical Name:')
+    pdf.drawString(20, 350, "Chemical Name:")
     pdf.setFont("Helvetica", 25)
     pdf.drawString(250, 350, batch)
 
     pdf.setFont("Helvetica-Bold", 25)
-    pdf.drawString(20, 300, 'Volume:')
+    pdf.drawString(20, 300, "Volume:")
     pdf.setFont("Helvetica", 25)
     pdf.drawString(250, 300, volume)
 
     pdf.setFont("Helvetica-Bold", 25)
-    pdf.drawString(20, 450, 'Concentration:')
+    pdf.drawString(20, 450, "Concentration:")
     pdf.setFont("Helvetica", 25)
     pdf.drawString(250, 300, concentration)
 
     pdf.setFont("Helvetica-Bold", 25)
-    pdf.drawString(20, 400, 'Date Created:')
+    pdf.drawString(20, 400, "Date Created:")
     pdf.setFont("Helvetica", 25)
     pdf.drawString(250, 400, date)
 
@@ -92,10 +102,12 @@ def generate_pdf(batch, date, concentration, volume, barcode_path, qr_code_path,
         pdf.drawInlineImage(qr_code_path, 645, 415, width=200, height=200)
 
     # Draw additional images (logo and flame)
-    pdf.drawInlineImage(logo, 0, 475, width=None, height=None,
-                        preserveAspectRatio=True)
-    pdf.drawInlineImage(flame, 580, 30, width=250, height=300,
-                        preserveAspectRatio=True)
+    pdf.drawInlineImage(
+        logo, 0, 475, width=None, height=None, preserveAspectRatio=True
+    )
+    pdf.drawInlineImage(
+        flame, 580, 30, width=250, height=300, preserveAspectRatio=True
+    )
 
     # Add precautions text
     #  pdf.setFont("Helvetica-Bold", 25)
@@ -112,7 +124,7 @@ def generate_pdf(batch, date, concentration, volume, barcode_path, qr_code_path,
 
 def on_submit():
     batch = batch_entry.get()
-#    size = size_entry.get()
+    #    size = size_entry.get()
     date = date_entry.get()
     volume = volume_entry.get()
     concentration = concentration_entry.get()
@@ -128,8 +140,16 @@ def on_submit():
 
     barcode_path = generate_barcode(barcode_input)
     qr_code_path = generate_qr_code(qr_code_input)
-    generate_pdf(batch, date, concentration, volume, barcode_path,
-                 qr_code_path, page_size, text)
+    generate_pdf(
+        batch,
+        date,
+        concentration,
+        volume,
+        barcode_path,
+        qr_code_path,
+        page_size,
+        text,
+    )
 
 
 # Set up GUI interface
@@ -145,34 +165,67 @@ def setup_interface():
     chemical_frame = ttk.Frame(notebook, style="TFrame")
     notebook.add(chemical_frame, text="Chemical Details")
 
-    tk.Label(chemical_frame, text="Chemical Name:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=0, column=0, padx=10, pady=5)
+    tk.Label(
+        chemical_frame,
+        text="Chemical Name:",
+        bg=BACKGROUND_COLOR,
+        fg=TEXT_COLOR,
+    ).grid(row=0, column=0, padx=10, pady=5)
     batch_entry = tk.Entry(chemical_frame, bg=ENTRY_COLOR, fg=TEXT_COLOR)
     batch_entry.grid(row=0, column=1, padx=10, pady=5)
 
-    tk.Label(chemical_frame, text="Volume:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=1, column=0, padx=10, pady=5)
+    tk.Label(
+        chemical_frame, text="Volume:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR
+    ).grid(row=1, column=0, padx=10, pady=5)
     volume_entry = tk.Entry(chemical_frame, bg=ENTRY_COLOR, fg=TEXT_COLOR)
     volume_entry.grid(row=1, column=1, padx=10, pady=5)
 
-    tk.Label(chemical_frame, text="Concentration:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=2, column=0, padx=10, pady=5)
-    concentration_entry = tk.Entry(chemical_frame, bg=ENTRY_COLOR, fg=TEXT_COLOR)
+    tk.Label(
+        chemical_frame,
+        text="Concentration:",
+        bg=BACKGROUND_COLOR,
+        fg=TEXT_COLOR,
+    ).grid(row=2, column=0, padx=10, pady=5)
+    concentration_entry = tk.Entry(
+        chemical_frame, bg=ENTRY_COLOR, fg=TEXT_COLOR
+    )
     concentration_entry.grid(row=2, column=1, padx=10, pady=5)
 
-    tk.Label(chemical_frame, text="Date Created:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=4, column=0, padx=10, pady=5)
+    tk.Label(
+        chemical_frame,
+        text="Date Created:",
+        bg=BACKGROUND_COLOR,
+        fg=TEXT_COLOR,
+    ).grid(row=4, column=0, padx=10, pady=5)
     date_entry = tk.Entry(chemical_frame, bg=ENTRY_COLOR, fg=TEXT_COLOR)
     date_entry.grid(row=4, column=1, padx=10, pady=5)
 
-    tk.Label(chemical_frame, text="Barcode Input:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=5, column=0, padx=10, pady=5)
+    tk.Label(
+        chemical_frame,
+        text="Barcode Input:",
+        bg=BACKGROUND_COLOR,
+        fg=TEXT_COLOR,
+    ).grid(row=5, column=0, padx=10, pady=5)
     barcode_entry = tk.Entry(chemical_frame, bg=ENTRY_COLOR, fg=TEXT_COLOR)
     barcode_entry.grid(row=5, column=1, padx=10, pady=5)
 
-    tk.Label(chemical_frame, text="QR Code Input:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=6, column=0, padx=10, pady=5)
+    tk.Label(
+        chemical_frame,
+        text="QR Code Input:",
+        bg=BACKGROUND_COLOR,
+        fg=TEXT_COLOR,
+    ).grid(row=6, column=0, padx=10, pady=5)
     qr_code_entry = tk.Entry(chemical_frame, bg=ENTRY_COLOR, fg=TEXT_COLOR)
     qr_code_entry.grid(row=6, column=1, padx=10, pady=5)
 
     # Page size selection
-    tk.Label(chemical_frame, text="Page Size:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=7, column=0, padx=10, pady=5)
+    tk.Label(
+        chemical_frame, text="Page Size:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR
+    ).grid(row=7, column=0, padx=10, pady=5)
     page_size_var = tk.StringVar(value="Portrait")  # Default value
-    page_size_menu = ttk.OptionMenu(chemical_frame, page_size_var, "Portrait", "Portrait", "Landscape")
+    page_size_menu = ttk.OptionMenu(
+        chemical_frame, page_size_var, "Portrait", "Portrait", "Landscape"
+    )
     page_size_menu.grid(row=7, column=1, padx=10, pady=5)
 
     # Second tab for Hazard Details
@@ -182,16 +235,33 @@ def setup_interface():
     # Signal Word selection
     hazard_type_var = tk.StringVar(value="H2")  # Default value
 
-    hazard_type_menu = tk.OptionMenu(hazard_frame, hazard_type_var, 
-        "Physical Hazards (H2)", 
-        "Health Hazards (H3)", 
-        "Environmental Hazards (H4)")
-    hazard_type_menu.config(bg=BUTTON_COLOR, fg=TEXT_COLOR, activebackground=HIGHLIGHT_COLOR)
-    tk.Label(hazard_frame, text="Select Hazard Type:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=0, column=0, padx=10, pady=5)
+    hazard_type_menu = tk.OptionMenu(
+        hazard_frame,
+        hazard_type_var,
+        "Physical Hazards (H2)",
+        "Health Hazards (H3)",
+        "Environmental Hazards (H4)",
+    )
+    hazard_type_menu.config(
+        bg=BUTTON_COLOR, fg=TEXT_COLOR, activebackground=HIGHLIGHT_COLOR
+    )
+    tk.Label(
+        hazard_frame,
+        text="Select Hazard Type:",
+        bg=BACKGROUND_COLOR,
+        fg=TEXT_COLOR,
+    ).grid(row=0, column=0, padx=10, pady=5)
     hazard_type_menu.grid(row=0, column=1, padx=10, pady=5)
 
     # Textbox for hazard details
-    text_box = tk.Text(hazard_frame, height=5, width=40, bg=ENTRY_COLOR, fg=TEXT_COLOR, insertbackground=TEXT_COLOR)
+    text_box = tk.Text(
+        hazard_frame,
+        height=5,
+        width=40,
+        bg=ENTRY_COLOR,
+        fg=TEXT_COLOR,
+        insertbackground=TEXT_COLOR,
+    )
     text_box.grid(row=1, column=0, columnspan=2, padx=10, pady=5)
 
     # Frame for hazard checkboxes
@@ -202,8 +272,9 @@ def setup_interface():
     checkbox_vars = []
 
     # Function to update checkboxes when hazard type changes
-    hazard_type_var.trace_add("write",
-                              lambda *args: update_hazard_checkboxes(checkbox_frame))
+    hazard_type_var.trace_add(
+        "write", lambda *args: update_hazard_checkboxes(checkbox_frame)
+    )
 
     # Third tab for Precautionary Type
     precaution_frame = ttk.Frame(notebook)
@@ -211,38 +282,65 @@ def setup_interface():
 
     # Precautionary Type selection
     precaution_type_var = tk.StringVar(value="P1")  # Default value
-    precaution_type_menu = tk.OptionMenu(precaution_frame, precaution_type_var,
-                                         "General precautionary statements (P1)",
-                                         "Prevention precautionary statements (P2)",
-                                         "Response precautionary statements (P3)",
-                                         "Storage precautionary statements (P4)",
-                                         "Disposal precautionary statements (P5)")
+    precaution_type_menu = tk.OptionMenu(
+        precaution_frame,
+        precaution_type_var,
+        "General precautionary statements (P1)",
+        "Prevention precautionary statements (P2)",
+        "Response precautionary statements (P3)",
+        "Storage precautionary statements (P4)",
+        "Disposal precautionary statements (P5)",
+    )
 
-    precaution_type_menu.config(bg=BUTTON_COLOR, fg=TEXT_COLOR,
-                                activebackground=HIGHLIGHT_COLOR)
-    tk.Label(precaution_frame, text="Select Precautionary Type:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=0, column=0, padx=10, pady=5)
+    precaution_type_menu.config(
+        bg=BUTTON_COLOR, fg=TEXT_COLOR, activebackground=HIGHLIGHT_COLOR
+    )
+    tk.Label(
+        precaution_frame,
+        text="Select Precautionary Type:",
+        bg=BACKGROUND_COLOR,
+        fg=TEXT_COLOR,
+    ).grid(row=0, column=0, padx=10, pady=5)
     precaution_type_menu.grid(row=0, column=1, padx=10, pady=5)
 
     # Precaution description text box
-    precaution_box = tk.Text(precaution_frame, height=5, width=40,
-                             bg=ENTRY_COLOR, fg=TEXT_COLOR, insertbackground=TEXT_COLOR)
+    precaution_box = tk.Text(
+        precaution_frame,
+        height=5,
+        width=40,
+        bg=ENTRY_COLOR,
+        fg=TEXT_COLOR,
+        insertbackground=TEXT_COLOR,
+    )
     precaution_box.grid(row=1, column=0, columnspan=2, padx=10, pady=5)
 
     # Frame for precautionary checkboxes
     precaution_checkbox_frame = tk.Frame(precaution_frame, bg=BACKGROUND_COLOR)
-    precaution_checkbox_frame.grid(row=2, column=0,
-                                   columnspan=2, padx=10, pady=5)
+    precaution_checkbox_frame.grid(
+        row=2, column=0, columnspan=2, padx=10, pady=5
+    )
     # List to keep track of precaution checkbox variables
     precaution_checkbox_vars = []
 
     # Generate PDF button
     # Generate PDF button
-    generate_button = tk.Button(precaution_frame, text="Generate PDF", command=on_submit, bg=BUTTON_COLOR, fg=TEXT_COLOR)
+    generate_button = tk.Button(
+        precaution_frame,
+        text="Generate PDF",
+        command=on_submit,
+        bg=BUTTON_COLOR,
+        fg=TEXT_COLOR,
+    )
     generate_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
 
-    precaution_type_var.trace_add("write", lambda *args: update_precautionary_checkboxes(precaution_checkbox_frame))
+    precaution_type_var.trace_add(
+        "write",
+        lambda *args: update_precautionary_checkboxes(
+            precaution_checkbox_frame
+        ),
+    )
 
-    notebook.pack(expand=True, fill='both')
+    notebook.pack(expand=True, fill="both")
 
 
 #######################################################################
@@ -290,15 +388,23 @@ def update_hazard_checkboxes(checkbox_frame):
             "H272 May intensify fire; oxidizer",
             "H280 Contains gas under pressure; may explode if heated",
             "H281 Contains refrigerated gas; may cause cryogenic burns or injury",
-            "H290 May be corrosive to metals"
+            "H290 May be corrosive to metals",
         ]
 
         # Create checkboxes for each hazard
         for hazard in hazards:
             var = tk.BooleanVar()
-            checkbox = tk.Checkbutton(checkbox_frame, text=hazard, variable=var, bg=BACKGROUND_COLOR, fg=TEXT_COLOR, selectcolor=BUTTON_COLOR)
-            checkbox.pack(anchor='w')
-            checkbox_vars.append((var, hazard))  # Keep track of checkbox vars and labels
+            checkbox = tk.Checkbutton(
+                checkbox_frame,
+                text=hazard,
+                variable=var,
+                bg=BACKGROUND_COLOR,
+                fg=TEXT_COLOR,
+                selectcolor=BUTTON_COLOR,
+            )
+            checkbox.pack(anchor="w")
+            # Keep track of checkbox vars and labels
+            checkbox_vars.append((var, hazard))
 
     # Check if the selected hazard type is "Health Hazards"
     elif hazard_type_var.get() == "Health Hazards (H3)":
@@ -338,15 +444,23 @@ def update_hazard_checkboxes(checkbox_frame):
             "H370 Causes damage to organs",
             "H371 May cause damage to organs",
             "H372 Causes damage to organs through prolonged or repeated exposure",
-            "H373 May cause damage to organs through prolonged or repeated exposure"
+            "H373 May cause damage to organs through prolonged or repeated exposure",
         ]
 
         # Create checkboxes for each health hazard
         for hazard in health_hazards:
             var = tk.BooleanVar()
-            checkbox = tk.Checkbutton(checkbox_frame, text=hazard, variable=var, bg=BACKGROUND_COLOR, fg=TEXT_COLOR, selectcolor=BUTTON_COLOR)
-            checkbox.pack(anchor='w')
-            checkbox_vars.append((var, hazard))  # Keep track of checkbox vars and labels
+            checkbox = tk.Checkbutton(
+                checkbox_frame,
+                text=hazard,
+                variable=var,
+                bg=BACKGROUND_COLOR,
+                fg=TEXT_COLOR,
+                selectcolor=BUTTON_COLOR,
+            )
+            checkbox.pack(anchor="w")
+            # Keep track of checkbox vars and labels
+            checkbox_vars.append((var, hazard))
 
     # Check if the selected hazard type is "Environmental Hazards"
     elif hazard_type_var.get() == "Environmental Hazards (H4)":
@@ -359,20 +473,31 @@ def update_hazard_checkboxes(checkbox_frame):
             "H412 Harmful to aquatic life with long-lasting effects",
             "H413 May cause long-lasting harmful effects to aquatic life",
             "H420 Harms public health and the environment by destroying ozone in the upper atmosphere",
-            "H441 Very toxic to terrestrial invertebrates"
+            "H441 Very toxic to terrestrial invertebrates",
         ]
 
         # Create checkboxes for each environmental hazard
         for hazard in environmental_hazards:
             var = tk.BooleanVar()
-            checkbox = tk.Checkbutton(checkbox_frame, text=hazard, variable=var, bg=BACKGROUND_COLOR, fg=TEXT_COLOR, selectcolor=BUTTON_COLOR)
-            checkbox.pack(anchor='w')
-            checkbox_vars.append((var, hazard))  # Keep track of checkbox vars and labels
+            checkbox = tk.Checkbutton(
+                checkbox_frame,
+                text=hazard,
+                variable=var,
+                bg=BACKGROUND_COLOR,
+                fg=TEXT_COLOR,
+                selectcolor=BUTTON_COLOR,
+            )
+            checkbox.pack(anchor="w")
+            # Keep track of checkbox vars and labels
+            checkbox_vars.append((var, hazard))
 
     # Add functionality to update text box based on checkboxes
     update_text_box()
 
+
 #######################################################################
+
+
 def update_precautionary_checkboxes(precaution_checkbox_frame):
     global checkbox_vars  # Ensure we're using the global variable
     # Clear existing checkboxes
@@ -383,18 +508,28 @@ def update_precautionary_checkboxes(precaution_checkbox_frame):
         precautions = [
             "P101 If medical advice is needed, have product container or label at hand.",
             "P102 Keep out of reach of children.",
-            "P103 Read carefully and follow all instructions." 
+            "P103 Read carefully and follow all instructions.",
         ]
 
         # Create checkboxes for each hazard
         for precaution in precautions:
             var = tk.BooleanVar()
-            checkbox = tk.Checkbutton(precaution_checkbox_frame, text=precaution, variable=var, bg=BACKGROUND_COLOR, fg=TEXT_COLOR, selectcolor=BUTTON_COLOR)
-            checkbox.pack(anchor='w')
-            checkbox_vars.append((var, precaution))  # Keep track of checkbox vars and labels
+            checkbox = tk.Checkbutton(
+                precaution_checkbox_frame,
+                text=precaution,
+                variable=var,
+                bg=BACKGROUND_COLOR,
+                fg=TEXT_COLOR,
+                selectcolor=BUTTON_COLOR,
+            )
+            checkbox.pack(anchor="w")
+            # Keep track of checkbox vars and labels
+            checkbox_vars.append((var, precaution))
 
     # Check if the selected hazard type is "Health Hazards"
-    elif precaution_type_var.get() == "Prevention precautionary statements (P2)":
+    elif (
+        precaution_type_var.get() == "Prevention precautionary statements (P2)"
+    ):
         precautions = [
             "P203 Obtain, read and follow all safety instructions before use. "
         ]
@@ -402,32 +537,48 @@ def update_precautionary_checkboxes(precaution_checkbox_frame):
         # Create checkboxes for each hazard
         for precaution in precautions:
             var = tk.BooleanVar()
-            checkbox = tk.Checkbutton(precaution_checkbox_frame, text=precaution, variable=var, bg=BACKGROUND_COLOR, fg=TEXT_COLOR, selectcolor=BUTTON_COLOR)
-            checkbox.pack(anchor='w')
-            checkbox_vars.append((var, precaution))  # Keep track of checkbox vars and labels
+            checkbox = tk.Checkbutton(
+                precaution_checkbox_frame,
+                text=precaution,
+                variable=var,
+                bg=BACKGROUND_COLOR,
+                fg=TEXT_COLOR,
+                selectcolor=BUTTON_COLOR,
+            )
+            checkbox.pack(anchor="w")
+            # Keep track of checkbox vars and labels
+            checkbox_vars.append((var, precaution))
 
     elif precaution_type_var.get() == "Response precautionary statements (P3)":
-        precautions = [  
-        "P301 IF SWALLOWED: ",
-        "P302 IF ON SKIN: ",
-        "P303 IF ON SKIN (or hair): ",
-        "P304 IF INHALED: ",
-        "P305 IF IN EYES: ",
-        "P306 IF ON CLOTHING: ",
-        "P308 IF exposed or concerned: ",
-        "P332 IF SKIN irritation occurs: ",
-        "P333 If skin irritation or rash occurs: ",
-        "P337 If eye irritation persists: ",
-        "P370 In case of fire: ",
-        "P371 In case of major fire and large quantities: "
+        precautions = [
+            "P301 IF SWALLOWED: ",
+            "P302 IF ON SKIN: ",
+            "P303 IF ON SKIN (or hair): ",
+            "P304 IF INHALED: ",
+            "P305 IF IN EYES: ",
+            "P306 IF ON CLOTHING: ",
+            "P308 IF exposed or concerned: ",
+            "P332 IF SKIN irritation occurs: ",
+            "P333 If skin irritation or rash occurs: ",
+            "P337 If eye irritation persists: ",
+            "P370 In case of fire: ",
+            "P371 In case of major fire and large quantities: ",
         ]
 
         # Create checkboxes for each hazard
         for precaution in precautions:
             var = tk.BooleanVar()
-            checkbox = tk.Checkbutton(precaution_checkbox_frame, text=precaution, variable=var, bg=BACKGROUND_COLOR, fg=TEXT_COLOR, selectcolor=BUTTON_COLOR)
-            checkbox.pack(anchor='w')
-            checkbox_vars.append((var, precaution))  # Keep track of checkbox vars and labels
+            checkbox = tk.Checkbutton(
+                precaution_checkbox_frame,
+                text=precaution,
+                variable=var,
+                bg=BACKGROUND_COLOR,
+                fg=TEXT_COLOR,
+                selectcolor=BUTTON_COLOR,
+            )
+            checkbox.pack(anchor="w")
+            # Keep track of checkbox vars and labels
+            checkbox_vars.append((var, precaution))
 
     elif precaution_type_var.get() == "Storage precautionary statements (P4)":
         precautions = [
@@ -439,32 +590,48 @@ def update_precautionary_checkboxes(precaution_checkbox_frame):
             "P406 Store in corrosive resistant/... container with a resistant inner liner.",
             "P407 Maintain air gap between stacks or pallets.",
             "P410 Protect from sunlight.",
-            "P411 Store at temperatures not exceeding ... °C/...°F.", 
+            "P411 Store at temperatures not exceeding ... °C/...°F.",
             "P412 Do not expose to temperatures exceeding 50 °C/ 122 °F. ",
             "P413 Store bulk masses greater than ... kg/...lbs at temperatures not exceeding ... °C/...°F. ",
-            "P420 Store separately."
+            "P420 Store separately.",
         ]
 
         # Create checkboxes for each hazard
         for precaution in precautions:
             var = tk.BooleanVar()
-            checkbox = tk.Checkbutton(precaution_checkbox_frame, text=precaution, variable=var, bg=BACKGROUND_COLOR, fg=TEXT_COLOR, selectcolor=BUTTON_COLOR)
-            checkbox.pack(anchor='w')
-            checkbox_vars.append((var, precaution))  # Keep track of checkbox vars and labels
+            checkbox = tk.Checkbutton(
+                precaution_checkbox_frame,
+                text=precaution,
+                variable=var,
+                bg=BACKGROUND_COLOR,
+                fg=TEXT_COLOR,
+                selectcolor=BUTTON_COLOR,
+            )
+            checkbox.pack(anchor="w")
+            # Keep track of checkbox vars and labels
+            checkbox_vars.append((var, precaution))
 
     elif precaution_type_var.get() == "Disposal precautionary statements (P5)":
         precautions = [
             "P501 Dispose of contents/container to ... ",
             "P502 Refer to manufacturer or supplier for information on recovery or recycling.",
-            "P503 Refer to manufacturer/supplier... for information on disposal/recovery/recycling."
+            "P503 Refer to manufacturer/supplier... for information on disposal/recovery/recycling.",
         ]
 
         # Create checkboxes for each hazard
         for precaution in precautions:
             var = tk.BooleanVar()
-            checkbox = tk.Checkbutton(precaution_checkbox_frame, text=precaution, variable=var, bg=BACKGROUND_COLOR, fg=TEXT_COLOR, selectcolor=BUTTON_COLOR)
-            checkbox.pack(anchor='w')
-            checkbox_vars.append((var, precaution))  # Keep track of checkbox vars and labels
+            checkbox = tk.Checkbutton(
+                precaution_checkbox_frame,
+                text=precaution,
+                variable=var,
+                bg=BACKGROUND_COLOR,
+                fg=TEXT_COLOR,
+                selectcolor=BUTTON_COLOR,
+            )
+            checkbox.pack(anchor="w")
+            # Keep track of checkbox vars and labels
+            checkbox_vars.append((var, precaution))
 
     # Add functionality to update text box based on checkboxes
     update_text_box()
