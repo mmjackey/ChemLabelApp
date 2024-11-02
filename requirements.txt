@@ -1,0 +1,9 @@
+chardet==5.2.0
+Levenshtein==0.26.1
+pillow==11.0.0
+python-barcode==0.15.1
+python-Levenshtein==0.26.1
+qrcode==8.0
+RapidFuzz==3.10.1
+reportlab==4.2.5
+setuptools==75.3.0
