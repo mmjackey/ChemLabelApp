@@ -107,8 +107,6 @@ class Hazard_frame(tk.Frame):
             self.checkbox_frames_generated = True
 
     def generate_hazard_checkboxes(self, hazard_type, frame):
-        # get the selected hazard type from the hazard_type_var button,
-        # and update the available checkboxes based on that selection
         if self.get_hazards_callback is not None:
             hazards = self.get_hazards_callback(hazard_type)
             # Create checkboxes for each hazard
@@ -125,7 +123,7 @@ class Hazard_frame(tk.Frame):
                 )
                 checkbox.pack(anchor="w", fill="x")
                 # Keep track of checkbox vars and labels
-                self.append_selected_hazard_callback(var, hazard)
+                self.append_hazard_variables_callback(var, hazard)
 
     def update_text_box(self):
         text = ""

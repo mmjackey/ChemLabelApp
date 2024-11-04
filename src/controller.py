@@ -16,19 +16,27 @@ class Controller:
     def handle_submit_pdf(self):
         pass
 
-    def send_hazards(self, hazard_type):
+    def get_hazards(self, hazard_type):
         return self.hazard_precautions_data.HAZARD_CLASSES.get(hazard_type, [])
 
-    def get_selected_hazards(self, hazard=False, precautions=False):
-        if hazard:
-            return self.hazard_precautions_data.selected_hazards
-        elif precautions:
-            return self.hazard_precautions_data.selected_precautions
-        else:
-            return None
+    def get_selected_hazards(self):
+        return self.hazard_precautions_data.selected_hazards
 
-    def append_selected_hazard(self, var, hazard):
+    def append_hazard_variables(self, var, hazard):
         self.hazard_precautions_data.selected_hazards.append((var, hazard))
+
+    def get_selected_precautions(self):
+        return self.hazard_precautions_data.selected_precautions
+
+    def append_precautions_variables(self, var, precaution):
+        self.hazard_precautions_data.selected_precautions.append(
+            (var, precaution)
+        )
+
+    def get_precautions(self, precaution_type):
+        return self.hazard_precautions_data.PRECAUTION_CLASSES.get(
+            precaution_type, []
+        )
 
     def on_submission(self):
         batch = self.view.chemical_frame.batch_entry.get()
@@ -41,8 +49,8 @@ class Controller:
         page_size_option = self.view.chemical_frame.page_size_var.get()
         stage = self.view.chemical_frame.stage_choice.get()
 
-        selected_hazards = self.get_selected_hazards(hazard=True)
-        selected_precautions = self.get_selected_hazards(precautions=True)
+        selected_hazards = self.get_selected_hazards()
+        selected_precautions = self.get_selected_precautions()
 
         barcode_input = self.view.chemical_frame.barcode_entry.get()
         barcode_path = PDF_generator.generate_barcode(barcode_input)

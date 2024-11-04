@@ -50,13 +50,27 @@ class App(Tk):
     def set_callbacks(self, controller):
         self.chemical_frame.submit_callback = controller.handle_submit_pdf
 
-        self.hazard_frame.get_hazards_callback = controller.send_hazards
+        self.hazard_frame.get_hazards_callback = controller.get_hazards
+
         self.hazard_frame.get_selected_hazards_callback = (
             controller.get_selected_hazards
         )
-        self.hazard_frame.append_selected_hazard_callback = (
-            controller.append_selected_hazard
+        self.hazard_frame.append_hazard_variables_callback = (
+            controller.append_hazard_variables
         )
+
+        self.precautions_frame.get_precautions_callback = (
+            controller.get_precautions
+        )
+
+        self.precautions_frame.get_selected_precautions_callback = (
+            controller.get_selected_precautions
+        )
+
+        self.precautions_frame.append_precautions_variables = (
+            controller.append_precautions_variables
+        )
+        self.precautions_frame.submission_callback = controller.on_submission
 
     def display_success(self, message):
         messagebox.showinfo("Success!", message)

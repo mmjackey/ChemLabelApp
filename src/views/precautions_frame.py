@@ -9,6 +9,13 @@ class Precautions_frame(tk.Frame):
         #  Third tab for Precautionary Type
         parent.notebook.add(self, text="Precautionary Details")
 
+        self.submission_callback = None
+        self.get_precautions_callback = None
+        self.get_selected_precautions_callback = None
+        self.append_precautions_variables = None
+
+        self.checkbox_frames_generated = False
+
         # Precautionary Type selection
         self.precaution_type_var = tk.StringVar(
             value="General precautionary statements (P1)"
@@ -67,19 +74,14 @@ class Precautions_frame(tk.Frame):
 
         self.precaution_checkboxes_frame = Precaution_checkboxes(self)
 
-    def update_precautionary_checkboxes(self, precaution_checkbox_frame):
-        # Clear existing checkboxes
-        for widget in precaution_checkbox_frame.winfo_children():
-            widget.destroy()
-
-        if (
-            self.precaution_type_var.get()
-            == "General precautionary statements (P1)"
-        ):
-            # Create checkboxes for each hazard
-            for precaution in self.precautions:
+    def generate_precautionary_checkboxes(
+        self, precaution_type, precaution_checkbox_frame
+    ):
+        if self.get_precautions_callback is not None:
+            precautions = self.get_precautions_callback(precaution_type)
+            for precaution in precautions:
                 var = tk.BooleanVar()
-                self.checkbox = tk.Checkbutton(
+                checkbox = tk.Checkbutton(
                     precaution_checkbox_frame,
                     text=precaution,
                     variable=var,
@@ -87,8 +89,9 @@ class Precautions_frame(tk.Frame):
                     fg=theme.TEXT_COLOR,
                     selectcolor=theme.BUTTON_COLOR,
                 )
-                self.checkbox.pack(anchor="w")
+                checkbox.pack(anchor="w")
                 # Keep track of checkbox vars and labels
+
                 self.checkbox_vars.append((var, precaution))
 
         # Add functionality to update text box based on checkboxes
