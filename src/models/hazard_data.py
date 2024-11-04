@@ -92,6 +92,49 @@ class Hazards_precaution_data:
                 "H420 Harms public health and the environment by destroying ozone in the upper atmosphere",
             ],
         }
+        self.PRECAUTION_CLASSES = {
+            "General precautionary statements (P1)": [
+                "P101 If medical advice is needed, have product container or label at hand.",
+                "P102 Keep out of reach of children.",
+                "P103 Read carefully and follow all instructions.",
+            ],
+            "Prevention precautionary statements (P2)": [
+                "P203 Obtain, read and follow all safety instructions before use. "
+            ],
+            "Response precautionary statements (P3)": [
+                "P301 IF SWALLOWED: ",
+                "P302 IF ON SKIN: ",
+                "P303 IF ON SKIN (or hair): ",
+                "P304 IF INHALED: ",
+                "P305 IF IN EYES: ",
+                "P306 IF ON CLOTHING: ",
+                "P308 IF exposed or concerned: ",
+                "P332 IF SKIN irritation occurs: ",
+                "P333 If skin irritation or rash occurs: ",
+                "P337 If eye irritation persists: ",
+                "P370 In case of fire: ",
+                "P371 In case of major fire and large quantities: ",
+            ],
+            "Storage precautionary statements (P4)": [
+                "P401 Store in accordance with ... ",
+                "P402 Store in a dry place. ",
+                "P403 Store in a well-ventilated place.",
+                "P404 Store in a closed container.",
+                "P405 Store locked up.",
+                "P406 Store in corrosive resistant/... container with a resistant inner liner.",
+                "P407 Maintain air gap between stacks or pallets.",
+                "P410 Protect from sunlight.",
+                "P411 Store at temperatures not exceeding ... °C/...°F.",
+                "P412 Do not expose to temperatures exceeding 50 °C/ 122 °F. ",
+                "P413 Store bulk masses greater than ... kg/...lbs at temperatures not exceeding ... °C/...°F. ",
+                "P420 Store separately.",
+            ],
+            "Disposal precautionary statements (P5)": [
+                "P501 Dispose of contents/container to ... ",
+                "P502 Refer to manufacturer or supplier for information on recovery or recycling.",
+                "P503 Refer to manufacturer/supplier... for information on disposal/recovery/recycling.",
+            ],
+        }
 
     def add_hazard(self, hazard):
         self.selected_hazards.append(hazard)

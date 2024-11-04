@@ -10,7 +10,10 @@ class Precautions_frame(tk.Frame):
         parent.notebook.add(self, text="Precautionary Details")
 
         # Precautionary Type selection
-        self.precaution_type_var = tk.StringVar(value="P1")  # Default value
+        self.precaution_type_var = tk.StringVar(
+            value="General precautionary statements (P1)"
+        )  # Default value
+
         self.precaution_type_menu = tk.OptionMenu(
             self,
             self.precaution_type_var,
@@ -51,65 +54,45 @@ class Precautions_frame(tk.Frame):
         )
 
         # Generate PDF button
-        generate_button = tk.Button(
+        self.generate_button = tk.Button(
             self,
             text="Generate PDF",
             command=self.on_submit,
             bg=theme.BUTTON_COLOR,
             fg=theme.TEXT_COLOR,
         )
-        generate_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
-        self.precaution_checkboxes_frame = Precaution_checkboxes(self)
-
-    def on_submit(self, parent):
-        batch = parent.Chemical_frame.batch_entry.get()
-        #    size = size_entry.get()
-        date = parent.Chemical_frame.date_entry.get()
-        volume = parent.Chemical_frame.volume_entry.get()
-        concentration = parent.Chemical_frame.concentration_entry.get()
-        barcode_input = parent.Chemical_frame.barcode_entry.get()
-        qr_code_input = parent.Chemical_frame.qr_code_entry.get()
-        page_size_option = parent.Chemical_frame.page_size_var.get()
-        stage = parent.Chemical_frame.stage_choice.get()
-
-        print(
-            batch,
-            date,
-            volume,
-            concentration,
-            barcode_input,
-            qr_code_input,
-            page_size_option,
-            stage,
+        self.generate_button.grid(
+            row=3, column=0, columnspan=2, padx=10, pady=10
         )
 
-        # text = text_box.get(
-        #    "1.0", tk.END
-        # ).strip()  # Get text from the Text widget
-        ## Get precautions from the Text widget
-        ## precautions = precaution_box.get("1.0", tk.END).strip()
+        self.precaution_checkboxes_frame = Precaution_checkboxes(self)
 
-        ## Set page size based on user selection
-        # page_size = landscape(A4) if page_size_option == "Landscape" else A4
+    def update_precautionary_checkboxes(self, precaution_checkbox_frame):
+        # Clear existing checkboxes
+        for widget in precaution_checkbox_frame.winfo_children():
+            widget.destroy()
 
-        # barcode_path = parent.pdf_generator.generate_barcode(barcode_input)
-        # qr_code_path = parent.pdf_generator.generate_qr_code(qr_code_input)
+        if (
+            self.precaution_type_var.get()
+            == "General precautionary statements (P1)"
+        ):
+            # Create checkboxes for each hazard
+            for precaution in self.precautions:
+                var = tk.BooleanVar()
+                self.checkbox = tk.Checkbutton(
+                    precaution_checkbox_frame,
+                    text=precaution,
+                    variable=var,
+                    bg=theme.BACKGROUND_COLOR,
+                    fg=theme.TEXT_COLOR,
+                    selectcolor=theme.BUTTON_COLOR,
+                )
+                self.checkbox.pack(anchor="w")
+                # Keep track of checkbox vars and labels
+                self.checkbox_vars.append((var, precaution))
 
-        ## Add barcode batch id to database
-        # print_synthesis_rows(barcode_input.upper(), stage)
-
-        # generate_pdf(
-        #    batch,
-        #    date,
-        #    concentration,
-        #    volume,
-        #    barcode_path,
-        #    qr_code_path,
-        #    page_size,
-        #    text,
-        # )
-
-        # messagebox.showinfo("Success", "PDF generated successfully!")
+        # Add functionality to update text box based on checkboxes
+        # update_text_box()
 
 
 class Precaution_checkboxes(tk.Frame):
@@ -120,7 +103,7 @@ class Precaution_checkboxes(tk.Frame):
         #  List to keep track of precaution checkbox variables
         self.precaution_checkbox_vars = []
 
-        # parent.precaution_type_var.trace_add(
-        #    "write",
-        #    lambda *args: update_precautionary_checkboxes(self),
-        # )
+        parent.precaution_type_var.trace_add(
+            "write",
+            lambda *args: parent.generate_precautionary_checkboxes(self),
+        )
