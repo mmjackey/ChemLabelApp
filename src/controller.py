@@ -39,6 +39,7 @@ class Controller:
         )
 
     def on_submission(self):
+        print("hi")
         batch = self.view.chemical_frame.batch_entry.get()
         #    size = size_entry.get()
         date = self.view.chemical_frame.date_entry.get()

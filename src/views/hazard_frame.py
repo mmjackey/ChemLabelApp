@@ -1,6 +1,5 @@
 import tkinter as tk
-
-import theme
+from tkinter import ttk
 
 
 class Hazard_frame(tk.Frame):
@@ -26,42 +25,25 @@ class Hazard_frame(tk.Frame):
             lambda *args: self.switch_frame(),
         )
 
-        self.hazard_type_menu = tk.OptionMenu(
+        self.hazard_type_menu = ttk.OptionMenu(
             self,
             self.hazard_type_var,
             "Physical Hazards (H2)",
             "Health Hazards (H3)",
             "Environmental Hazards (H4)",
         )
-        self.hazard_type_menu.config(
-            bg=theme.BUTTON_COLOR,
-            fg=theme.TEXT_COLOR,
-            activebackground=theme.HIGHLIGHT_COLOR,
-        )
-
-        self.select_hazard_label = tk.Label(
-            self,
-            text="Select Hazard Type:",
-            bg=theme.BACKGROUND_COLOR,
-            fg=theme.TEXT_COLOR,
-        )
-        self.select_hazard_label.grid(row=0, column=0, padx=10, pady=5)
 
         self.hazard_type_menu.grid(row=0, column=1, padx=10, pady=5)
 
+        self.select_hazard_label = ttk.Label(self, text="Select Hazard Type:")
+        self.select_hazard_label.grid(row=0, column=0, padx=10, pady=5)
+
         #  Textbox for hazard details
-        self.text_box = tk.Text(
-            self,
-            height=5,
-            width=40,
-            bg=theme.ENTRY_COLOR,
-            fg=theme.TEXT_COLOR,
-            insertbackground=theme.TEXT_COLOR,
-        )
+        self.text_box = tk.Text(self, height=5, width=40)
         self.text_box.grid(row=1, column=0, columnspan=2, padx=10, pady=5)
 
         # Container for hazard checkboxes
-        self.checkboxes_container = tk.Frame(self, bg=theme.BACKGROUND_COLOR)
+        self.checkboxes_container = ttk.Frame(self)
         self.checkboxes_container.grid(
             row=2, column=0, columnspan=2, padx=10, pady=5, sticky="nsew"
         )
@@ -117,13 +99,10 @@ class Hazard_frame(tk.Frame):
             # Create checkboxes for each hazard
             for hazard in hazards:
                 var = tk.BooleanVar()
-                checkbox = tk.Checkbutton(
+                checkbox = ttk.Checkbutton(
                     frame,
                     text=hazard,
                     variable=var,
-                    bg=theme.BACKGROUND_COLOR,
-                    fg=theme.TEXT_COLOR,
-                    selectcolor=theme.BUTTON_COLOR,
                     command=lambda var=var: self.update_text_box(),
                 )
                 checkbox.pack(anchor="w", fill="x")

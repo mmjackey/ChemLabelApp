@@ -1,6 +1,5 @@
 import tkinter as tk
-
-import theme
+from tkinter import ttk
 
 
 class Precautions_frame(tk.Frame):
@@ -26,7 +25,7 @@ class Precautions_frame(tk.Frame):
             lambda *args: self.switch_frame(),
         )
 
-        self.precaution_type_menu = tk.OptionMenu(
+        self.precaution_type_menu = ttk.OptionMenu(
             self,
             self.precaution_type_var,
             "General precautionary statements (P1)",
@@ -36,45 +35,40 @@ class Precautions_frame(tk.Frame):
             "Disposal precautionary statements (P5)",
         )
 
-        self.precaution_type_menu.config(
-            bg=theme.BUTTON_COLOR,
-            fg=theme.TEXT_COLOR,
-            activebackground=theme.HIGHLIGHT_COLOR,
-        )
+        self.precaution_type_menu.grid(row=0, column=1, padx=10, pady=5)
 
-        self.precaution_type_label = tk.Label(
-            self,
-            text="Select Precautionary Type:",
-            bg=theme.BACKGROUND_COLOR,
-            fg=theme.TEXT_COLOR,
+        self.precaution_type_label = ttk.Label(
+            self, text="Select Precautionary Type:"
         )
         self.precaution_type_label.grid(row=0, column=0, padx=10, pady=5)
 
-        self.precaution_type_menu.grid(row=0, column=1, padx=10, pady=5)
-
         # Precaution description text box
-        self.text_box = tk.Text(
-            self,
-            height=5,
-            width=40,
-            bg=theme.ENTRY_COLOR,
-            fg=theme.TEXT_COLOR,
-            insertbackground=theme.TEXT_COLOR,
-        )
+        self.text_box = tk.Text(self, height=5, width=40)
         self.text_box.grid(row=1, column=0, columnspan=2, padx=10, pady=5)
 
         # Generate PDF button
-        self.generate_button = tk.Button(
+        self.generate_button = ttk.Button(
             self,
             text="Generate PDF",
-            command=self.submission_callback,
-            bg=theme.BUTTON_COLOR,
-            fg=theme.TEXT_COLOR,
+            command=lambda: self.submission_callback(),
         )
         self.generate_button.grid(
             row=3, column=0, columnspan=2, padx=10, pady=10
         )
 
+        # Container for hazard checkboxes
+        self.checkboxes_container = tk.Frame(self)
+        self.checkboxes_container.grid(
+            row=2, column=0, columnspan=2, padx=10, pady=5, sticky="nsew"
+        )
+
+        # Configure grid weights
+        self.rowconfigure(2, weight=1)
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+
+        self.checkboxes_container.rowconfigure(0, weight=1)
+        self.checkboxes_container.columnconfigure(0, weight=1)
         self.p1_checkboxes_frame = PrecautionClassCheckboxes(
             self, default_class=True
         )
@@ -136,13 +130,10 @@ class Precautions_frame(tk.Frame):
             precautions = self.get_precautions_callback(precaution_type)
             for precaution in precautions:
                 var = tk.BooleanVar()
-                checkbox = tk.Checkbutton(
+                checkbox = ttk.Checkbutton(
                     precaution_checkbox_frame,
                     text=precaution,
                     variable=var,
-                    bg=theme.BACKGROUND_COLOR,
-                    fg=theme.TEXT_COLOR,
-                    selectcolor=theme.BUTTON_COLOR,
                     command=lambda: self.update_text_box(),
                 )
                 checkbox.pack(anchor="w", fill="x")
