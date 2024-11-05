@@ -5,18 +5,8 @@ from barcode import Code128
 from barcode.writer import ImageWriter
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.lib.units import mm
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
-from reportlab.platypus import (
-    Image,
-    Paragraph,
-    SimpleDocTemplate,
-    Spacer,
-    Table,
-    TableStyle,
-)
 
 from config import AppConfig
 
@@ -54,7 +44,8 @@ class PDF_generator:
             self.error_generator.display_error("Error", str(e))
             return None
 
-    def generate_pdf(self, details):
+    def generate_pdf(self, details, hazards, precautions):
+
         item_name = details.get("name")
         volume = details.get("volume")
         concentration = details.get("concentration")
@@ -62,6 +53,9 @@ class PDF_generator:
         qr_code_input = details.get("qr code input")
         page_size = details.get("page size")
         page_size = landscape(A4) if page_size == "Landscape" else A4
+
+        selected_hazards = self.selected_items(hazards)
+        selected_precautions = self.selected_items(precautions)
 
         fileName = "output.pdf"
         documentTitle = f"{item_name} Inventory Label"
@@ -75,17 +69,6 @@ class PDF_generator:
 
         pdf.setPageSize(page_size)
         pdf.setTitle(documentTitle)
-
-        pdf.rect(10, 25, 565, 245, stroke=1, fill=0)
-
-        # Adding multiline text from the Text widget
-        pdf.setFont("Helvetica", 16)
-        pdf.setFillColor(colors.black)
-        text_obj = pdf.beginText(20, 250)
-
-        # for line in text.splitlines():
-        #     text_obj.textLine(line)
-        # pdf.drawText(text_obj)
 
         # Draw chemical info
 
@@ -105,21 +88,23 @@ class PDF_generator:
         pdf.drawString(250, 450, concentration)
 
         barcode_io = self.generate_barcode(barcode_input)
+        qr_code_io = self.generate_qr_code(qr_code_input)
 
         # Draw barcode and QR code images
         if barcode_io:
             barcode_image = ImageReader(barcode_io)
             pdf.drawImage(barcode_image, 460, 435, width=200, height=150)
-        # if qr_code_path:
-        #     pdf.drawInlineImage(qr_code_path, 645, 415, width=200, height=200)
+        if qr_code_io:
+            qr_code_image = ImageReader(qr_code_io)
+            pdf.drawImage(qr_code_image, 645, 415, width=200, height=200)
 
         # Draw additional images (logo and flame)
         pdf.drawInlineImage(
             str(logo_path),
             0,
             475,
-            width=None,
-            height=None,
+            width=200,
+            height=150,
             preserveAspectRatio=True,
         )
         pdf.drawInlineImage(
@@ -131,14 +116,35 @@ class PDF_generator:
             preserveAspectRatio=True,
         )
 
+        # this is the precaution / hazards box
+        pdf.rect(10, 25, 565, 245, stroke=1, fill=0)
+
+        pdf.setFont("Helvetica", 16)
+        pdf.setFillColor(colors.black)
+        text_obj = pdf.beginText(20, 250)
+
+        for hazard in selected_hazards:
+            text_obj.textOut(str(hazard) + " ")
+        pdf.drawText(text_obj)
+
         # Add precautions text
-        #  pdf.setFont("Helvetica-Bold", 25)
-        # pdf.drawString(20, 450, 'Precautions:')
-        # pdf.setFont("Helvetica", 16)
-        # precaution_text_obj = pdf.beginText(20, 420)
-        # for line in precautions.splitlines():
-        #     precaution_text_obj.textLine(line)
-        # pdf.drawText(precaution_text_obj)
+        pdf.setFont("Helvetica-Bold", 25)
+        pdf.drawString(20, 200, "Precautions:")
+
+        pdf.setFont("Helvetica", 16)
+        precaution_text_obj = pdf.beginText(20, 180)
+
+        for precaution in selected_precautions:
+            precaution_text_obj.textOut(str(precaution) + " ")
+        pdf.drawText(precaution_text_obj)
 
         # Saving the pdf
         pdf.save()
+
+    def selected_items(self, item_list):
+        selected_items = []
+        if item_list is not None:
+            for var, label in item_list:
+                if var.get():
+                    selected_items.append(label)
+        return selected_items

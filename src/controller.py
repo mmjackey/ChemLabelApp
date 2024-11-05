@@ -41,8 +41,8 @@ class Controller:
     def on_submission(self):
         details = self.view.chemical_frame.get_item_details()
 
-        # selected_hazards = self.get_selected_hazards()
-        # selected_precautions = self.get_selected_precautions()
+        selected_hazards = self.get_selected_hazards()
+        selected_precautions = self.get_selected_precautions()
 
         ## Add barcode batch id to database
         # print_synthesis_rows(barcode_input.upper(), stage)
@@ -50,6 +50,8 @@ class Controller:
         ## Set page size based on user selection
         # page_size = landscape(A4) if page_size_option == "Landscape" else A4
 
-        self.pdf_generator.generate_pdf(details)
+        self.pdf_generator.generate_pdf(
+            details, selected_hazards, selected_precautions
+        )
 
         # messagebox.showinfo("Success", "PDF generated successfully!")
