@@ -74,36 +74,41 @@ class Hazard_frame(tk.Frame):
         self.checkboxes_container.rowconfigure(0, weight=1)
         self.checkboxes_container.columnconfigure(0, weight=1)
 
-        self.h2_checkboxes_frame = HazardClass2Checkboxes(self)
-        self.h3_checkboxes_frame = HazardClass3Checkboxes(self)
-        self.h4_checkboxes_frame = HazardClass4Checkboxes(self)
+        self.h2_checkboxes_frame = HazardClassCheckboxes(
+            self, default_class=True
+        )
+        self.h3_checkboxes_frame = HazardClassCheckboxes(self)
+        self.h4_checkboxes_frame = HazardClassCheckboxes(self)
 
     def switch_frame(self):
         match self.hazard_type_var.get():
             case "Physical Hazards (H2)":
+                self.hide_frames()
                 self.show_frame(self.h2_checkboxes_frame)
-                self.hide_frame(self.h3_checkboxes_frame)
-                self.hide_frame(self.h4_checkboxes_frame)
             case "Health Hazards (H3)":
-                self.hide_frame(self.h2_checkboxes_frame)
+                self.hide_frames()
                 self.show_frame(self.h3_checkboxes_frame)
-                self.hide_frame(self.h4_checkboxes_frame)
             case "Environmental Hazards (H4)":
-                self.hide_frame(self.h2_checkboxes_frame)
-                self.hide_frame(self.h3_checkboxes_frame)
+                self.hide_frames()
                 self.show_frame(self.h4_checkboxes_frame)
 
     def show_frame(self, frame):
         frame.grid(row=2, column=0, columnspan=2, padx=10, pady=5)
 
-    def hide_frame(self, frame):
-        frame.grid_forget()
+    def hide_frames(self):
+        self.h2_checkboxes_frame.grid_forget()
+        self.h3_checkboxes_frame.grid_forget()
+        self.h4_checkboxes_frame.grid_forget()
 
-    def load_default_checkboxes(self):
+    def load_checkboxes(self):
         if not self.checkbox_frames_generated:
-            self.h2_checkboxes_frame.generate_checkboxes()
-            self.h3_checkboxes_frame.generate_checkboxes()
-            self.h4_checkboxes_frame.generate_checkboxes()
+            self.h2_checkboxes_frame.generate_checkboxes(
+                "Physical Hazards (H2)"
+            )
+            self.h3_checkboxes_frame.generate_checkboxes("Health Hazards (H3)")
+            self.h4_checkboxes_frame.generate_checkboxes(
+                "Environmental Hazards (H4)"
+            )
             self.checkbox_frames_generated = True
 
     def generate_hazard_checkboxes(self, hazard_type, frame):
@@ -128,7 +133,7 @@ class Hazard_frame(tk.Frame):
     def update_text_box(self):
         text = ""
         if self.get_selected_hazards_callback is not None:
-            hazard_vars = self.get_selected_hazards_callback(hazard=True)
+            hazard_vars = self.get_selected_hazards_callback()
 
         if hazard_vars is not None:
             for var, label in hazard_vars:
@@ -138,36 +143,15 @@ class Hazard_frame(tk.Frame):
             self.text_box.insert(tk.END, text)  # Insert the updated text
 
 
-class HazardClass2Checkboxes(tk.Frame):
-    def __init__(self, parent):
+class HazardClassCheckboxes(tk.Frame):
+    def __init__(self, parent, default_class=False):
         super().__init__(parent.checkboxes_container)
 
         self.parent = parent
 
-        self.grid(row=2, column=0, columnspan=2, padx=10, pady=5)
+        if default_class:
+            self.grid(row=2, column=0, columnspan=2, padx=10, pady=5)
 
-    def generate_checkboxes(self):
+    def generate_checkboxes(self, hazard_class):
         parent = self.parent
-        parent.generate_hazard_checkboxes("Physical Hazards (H2)", self)
-
-
-class HazardClass3Checkboxes(tk.Frame):
-    def __init__(self, parent):
-        super().__init__(parent.checkboxes_container)
-
-        self.parent = parent
-
-    def generate_checkboxes(self):
-        parent = self.parent
-        parent.generate_hazard_checkboxes("Health Hazards (H3)", self)
-
-
-class HazardClass4Checkboxes(tk.Frame):
-    def __init__(self, parent):
-        super().__init__(parent.checkboxes_container)
-
-        self.parent = parent
-
-    def generate_checkboxes(self):
-        parent = self.parent
-        parent.generate_hazard_checkboxes("Environmental Hazards (H4)", self)
+        parent.generate_hazard_checkboxes(hazard_class, self)

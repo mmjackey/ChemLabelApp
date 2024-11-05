@@ -45,7 +45,9 @@ class App(Tk):
         tab_text = event.widget.tab(selected_tab, "text")
 
         if tab_text == "Hazard Details":
-            self.hazard_frame.load_default_checkboxes()
+            self.hazard_frame.load_checkboxes()
+        elif tab_text == "Precautionary Details":
+            self.precautions_frame.load_checkboxes()
 
     def set_callbacks(self, controller):
         self.chemical_frame.submit_callback = controller.handle_submit_pdf
