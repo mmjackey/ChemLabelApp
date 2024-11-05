@@ -32,6 +32,8 @@ class App(Tk):
             self.hazard_frame.load_checkboxes()
         elif tab_text == "Precautionary Details":
             self.precautions_frame.load_checkboxes()
+        else:
+            pass
 
     def set_callbacks(self, controller):
         self.chemical_frame.submit_callback = controller.handle_submit_pdf

@@ -8,12 +8,15 @@ class Chemical_frame(tk.Frame):
         super().__init__(parent)
         self.submit_callback = None
 
-        parent.notebook.add(self, text="Chemical Details")
+        parent.notebook.add(self, text="Item Details")
 
-        # Configure grid weights
-        self.rowconfigure(2, weight=1)
+        """
+        Configure grid weights so that the items expand and contract with
+        window
+        """
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
+        self.rowconfigure(2, weight=1)
 
         self.entries_containter = tk.Frame(self)
         self.entries_containter.grid(row=0, column=0)
@@ -40,14 +43,6 @@ class Chemical_frame(tk.Frame):
 
         self.concentration_entry = ttk.Entry(self.entries_containter)
         self.concentration_entry.grid(row=2, column=1, padx=10, pady=5)
-
-        self.date_created_label = ttk.Label(
-            self.entries_containter, text="Date Created:"
-        )
-        self.date_created_label.grid(row=4, column=0, padx=10, pady=5)
-
-        self.date_entry = ttk.Entry(self.entries_containter)
-        self.date_entry.grid(row=4, column=1, padx=10, pady=5)
 
         self.barcode_input_label = ttk.Label(
             self.entries_containter, text="Barcode Input:"
@@ -76,12 +71,12 @@ class Chemical_frame(tk.Frame):
         )
         self.page_size_label.grid(row=7, column=0, padx=10, pady=5)
 
-        self.page_size_var = tk.StringVar(value="Portrait")  # Default value
+        self.page_size_var = tk.StringVar(value="Landscape")  # Default value
 
         self.page_size_menu = ttk.Combobox(
             self.entries_containter,
             textvariable=self.page_size_var,
-            values=["Portrait", "Portrait", "Landscape"],
+            values=["Portrait", "Landscape"],
         )
 
         self.page_size_menu.grid(row=7, column=1, padx=10, pady=5)
@@ -92,7 +87,7 @@ class Chemical_frame(tk.Frame):
         self.stage_selection_label.grid(row=9, column=0, padx=5, pady=5)
 
         self.stage_choice = tk.StringVar(value="Synthesis")
-        options = [
+        stage_options = [
             "Synthesis",
             "Washing",
             "Drying",
@@ -105,7 +100,7 @@ class Chemical_frame(tk.Frame):
         self.stage_entry = ttk.Combobox(
             self.entries_containter,
             textvariable=self.stage_choice,
-            values=options,
+            values=stage_options,
         )
 
         self.stage_entry.grid(row=9, column=1, padx=5, pady=5)
@@ -118,23 +113,22 @@ class Chemical_frame(tk.Frame):
             command=self.checkbox_checked,
         )
 
-        self.checkbox.grid(row=8, column=0, padx=10, pady=5)
+        self.checkbox.grid(row=8, column=1, padx=10, pady=5)
 
-        # Configure grid weights
-        self.rowconfigure(2, weight=1)
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
+    def get_item_details(self):
+        details = {
+            "name": self.batch_entry.get(),
+            "volume": self.volume_entry.get(),
+            "concentration": self.concentration_entry.get(),
+            "barcode input": self.barcode_entry.get(),
+            "qr code input": self.qr_code_entry.get(),
+            "page size": self.page_size_var.get(),
+            "stage": self.stage_entry.get(),
+        }
+        return details
 
     def checkbox_checked(self):
         if self.checkbox_var.get():
             pass
         else:
             pass
-
-    def update_text_box(self, parent):
-        text = ""
-        for var, label in self.checkbox_vars:
-            if var.get():
-                text += f"{label}\n"
-        parent.text_box.delete("1.0", tk.END)  # Clear the existing text
-        parent.text_box.insert(tk.END, text)  # Insert the updated text

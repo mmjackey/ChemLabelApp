@@ -20,12 +20,7 @@ class Precautions_frame(tk.Frame):
             value="General precautionary statements (P1)"
         )  # Default value
 
-        self.precaution_type_var.trace_add(
-            "write",
-            lambda *args: self.switch_frame(),
-        )
-
-        self.precaution_type_menu = ttk.OptionMenu(
+        self.precaution_type_menu = tk.OptionMenu(
             self,
             self.precaution_type_var,
             "General precautionary statements (P1)",
@@ -69,6 +64,7 @@ class Precautions_frame(tk.Frame):
 
         self.checkboxes_container.rowconfigure(0, weight=1)
         self.checkboxes_container.columnconfigure(0, weight=1)
+
         self.p1_checkboxes_frame = PrecautionClassCheckboxes(
             self, default_class=True
         )
@@ -122,6 +118,11 @@ class Precautions_frame(tk.Frame):
             self.p5_checkboxes_frame.generate_checkboxes(
                 "Disposal precautionary statements (P5)"
             )
+
+        self.precaution_type_var.trace_add(
+            "write",
+            lambda *args: self.switch_frame(),
+        )
 
     def generate_precautionary_checkboxes(
         self, precaution_type, precaution_checkbox_frame

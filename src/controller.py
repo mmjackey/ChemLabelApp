@@ -39,25 +39,10 @@ class Controller:
         )
 
     def on_submission(self):
-        print("hi")
-        batch = self.view.chemical_frame.batch_entry.get()
-        #    size = size_entry.get()
-        date = self.view.chemical_frame.date_entry.get()
-        volume = self.view.chemical_frame.volume_entry.get()
-        concentration = self.view.chemical_frame.concentration_entry.get()
-        barcode_input = self.view.chemical_frame.barcode_entry.get()
-        qr_code_input = self.view.chemical_frame.qr_code_entry.get()
-        page_size_option = self.view.chemical_frame.page_size_var.get()
-        stage = self.view.chemical_frame.stage_choice.get()
+        details = self.view.chemical_frame.get_item_details()
 
-        selected_hazards = self.get_selected_hazards()
-        selected_precautions = self.get_selected_precautions()
-
-        barcode_input = self.view.chemical_frame.barcode_entry.get()
-        barcode_path = PDF_generator.generate_barcode(barcode_input)
-
-        qr_code_input = self.view.chemical_fram.qr_code_entry.get()
-        qr_path = self.pdf_generator.generate_qr_code(qr_code_input)
+        # selected_hazards = self.get_selected_hazards()
+        # selected_precautions = self.get_selected_precautions()
 
         ## Add barcode batch id to database
         # print_synthesis_rows(barcode_input.upper(), stage)
@@ -65,30 +50,6 @@ class Controller:
         ## Set page size based on user selection
         # page_size = landscape(A4) if page_size_option == "Landscape" else A4
 
-        # generate_pdf(
-        #    batch,
-        #    date,
-        #    concentration,
-        #    volume,
-        #    barcode_path,
-        #    qr_code_path,
-        #    page_size,
-        #    text,
-        # )
-
-        self.pdf_generator.generate_pdf()
-
-        print(
-            batch,
-            date,
-            volume,
-            concentration,
-            barcode_input,
-            qr_code_input,
-            page_size_option,
-            stage,
-            selected_hazards,
-            selected_precautions,
-        )
+        self.pdf_generator.generate_pdf(details)
 
         # messagebox.showinfo("Success", "PDF generated successfully!")

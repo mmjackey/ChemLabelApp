@@ -19,13 +19,7 @@ class Hazard_frame(tk.Frame):
             value="Physical Hazards (H2)"
         )  # Default value
 
-        # Function to update checkboxes when hazard type changes
-        self.hazard_type_var.trace_add(
-            "write",
-            lambda *args: self.switch_frame(),
-        )
-
-        self.hazard_type_menu = ttk.OptionMenu(
+        self.hazard_type_menu = tk.OptionMenu(
             self,
             self.hazard_type_var,
             "Physical Hazards (H2)",
@@ -92,6 +86,11 @@ class Hazard_frame(tk.Frame):
                 "Environmental Hazards (H4)"
             )
             self.checkbox_frames_generated = True
+            # Function to update checkboxes when hazard type changes
+            self.hazard_type_var.trace_add(
+                "write",
+                lambda *args: self.switch_frame(),
+            )
 
     def generate_hazard_checkboxes(self, hazard_type, frame):
         if self.get_hazards_callback is not None:
