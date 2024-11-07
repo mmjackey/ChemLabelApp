@@ -251,10 +251,19 @@ def setup_interface():
     tk.Label(stage_frame, text="Stage:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=0, column=0, padx=5, pady=5)
     stage_choice = tk.StringVar()
     options = ["Synthesis", "Washing"]
+<<<<<<< Updated upstream
     stage_entry = ttk.OptionMenu(stage_frame, stage_choice, options[0], *options)
+=======
+
+    
+
+    stage_entry = ttk.OptionMenu(
+        stage_frame, stage_choice, options[0], *options, command = OptionMenu_SelectionEvent
+    )
+>>>>>>> Stashed changes
     stage_entry.grid(row=0, column=1, padx=5, pady=5)
     stage_frame.grid_forget()
-
+    
     def checkbox_checked():
         if checkbox_var.get():
             stage_frame.grid(row=9, column=0, columnspan=2, padx=10, pady=5)
@@ -378,7 +387,10 @@ def setup_interface():
     )
 
     notebook.pack(expand=True, fill="both")
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 
 #######################################################################
 def update_hazard_checkboxes(checkbox_frame):
@@ -673,7 +685,54 @@ def update_precautionary_checkboxes(precaution_checkbox_frame):
     # Add functionality to update text box based on checkboxes
     update_text_box()
 
+<<<<<<< Updated upstream
 def print_synthesis_rows(b,s):
+=======
+def OptionMenu_SelectionEvent(event):
+    #print(stage_choice.get())
+    s = ''
+    if stage_choice.get() != None:
+        s = stage_choice.get().lower()
+    conn = psycopg2.connect(
+        database="inventory_management",
+        user="postgres",
+        host="host.docker.internal",
+        password="team3#",
+        port=5432,
+    )
+
+    cur = conn.cursor()
+    cur.execute(f"SELECT * FROM {s}")
+    colnames = [desc[0] for desc in cur.description]
+    
+    stage_notebook = ttk.Notebook(root)
+
+    # First tab for Chemical Details
+    label_frames = []
+    
+
+    count = 0
+    for name in colnames:
+        frame = ttk.Frame(stage_notebook, style="TFrame")
+        stage_notebook.add(frame, text=str(name).upper())
+        tk.Label(
+            frame,
+            text=str(name).upper(),
+            bg=BACKGROUND_COLOR,
+            fg=TEXT_COLOR,
+        ).grid(row=count, column=0, padx=10, pady=5)
+        col_entry = tk.Entry(frame, bg=ENTRY_COLOR, fg=TEXT_COLOR)
+        col_entry.grid(row=count, column=1, padx=10, pady=5)
+
+        label_frames.append(tuple(frame,col_entry))
+        
+        count += 1
+    
+    cur.close()
+    conn.close()
+
+def print_synthesis_rows(b, s):
+>>>>>>> Stashed changes
 
     conn = psycopg2.connect(
         database="inventory_management",
