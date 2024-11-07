@@ -1,4 +1,4 @@
-from tkinter import Tk, messagebox, ttk
+from tkinter import Tk, filedialog, messagebox, ttk
 
 from ttkbootstrap import Style
 
@@ -60,8 +60,15 @@ class App(Tk):
         )
         self.precautions_frame.submission_callback = controller.on_submission
 
+        controller.set_get_pdf_path_callback(self.get_file_path)
+
     def display_success(self, message):
         messagebox.showinfo("Success!", message)
 
     def display_error(self, error_message):
         messagebox.showerror("ERROR", error_message)
+
+    def get_file_path(self):
+        return filedialog.askopenfilename(
+            title="Select a Directory", filetypes=".pdf"
+        )
