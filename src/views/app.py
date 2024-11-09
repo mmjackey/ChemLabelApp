@@ -2,13 +2,12 @@ from tkinter import Tk, filedialog, messagebox, ttk
 
 from ttkbootstrap import Style
 
-import views.chemical_frame as cf
-import views.hazard_frame as hf
-import views.precautions_frame as pf
+from views.item_frame import ItemFrameContainer
+from views.warning_frame import HazardPrecautionFrame
 
 
 class App(Tk):
-    def __init__(self):
+    def __init__(self, controller):
         # initializing the Tk class instance
         super().__init__()
 
@@ -16,51 +15,49 @@ class App(Tk):
 
         self.style = Style(theme="darkly")
 
+        self.controller = controller
+
         self.notebook = ttk.Notebook()
         self.notebook.pack(fill="both", expand=True)
         self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_selection)
 
-        self.chemical_frame = cf.Chemical_frame(self)
-        self.hazard_frame = hf.Hazard_frame(self)
-        self.precautions_frame = pf.Precautions_frame(self)
+        item_types = {
+            "Chemical Inventory": ["chemical_inventory", "general_product"],
+            "General Inventory": ["general_inventory", "general_product"],
+            "Product Inventory (Batch Process)": [
+                "batch_inventory",
+                "synthesis",
+                "washing",
+                "drying",
+                "functionalization",
+                "quality_control",
+                "shipping",
+            ],
+        }
+
+        self.item_frame_container = ItemFrameContainer(controller, item_types)
+        self.notebook.add(self.item_frame_container, text="Item Details")
+
+        self.hazard_frame = HazardPrecautionFrame(
+            self, controller, self.controller.get_hazard_classes_dict()
+        )
+        self.notebook.add(self.hazard_frame, text="Hazard Details")
+
+        self.precautions_frame = HazardPrecautionFrame(
+            self, controller, self.controller.get_precaution_classes_dict()
+        )
+        self.notebook.add(self.precautions_frame, text="Precautionary Details")
 
     def on_tab_selection(self, event):
         selected_tab = event.widget.select()
         tab_text = event.widget.tab(selected_tab, "text")
 
         if tab_text == "Hazard Details":
-            self.hazard_frame.load_checkboxes()
+            pass
         elif tab_text == "Precautionary Details":
-            self.precautions_frame.load_checkboxes()
+            pass
         else:
             pass
-
-    def set_callbacks(self, controller):
-        self.chemical_frame.submit_callback = controller.handle_submit_pdf
-
-        self.hazard_frame.get_hazards_callback = controller.get_hazards
-
-        self.hazard_frame.get_selected_hazards_callback = (
-            controller.get_selected_hazards
-        )
-        self.hazard_frame.append_hazard_variables_callback = (
-            controller.append_hazard_variables
-        )
-
-        self.precautions_frame.get_precautions_callback = (
-            controller.get_precautions
-        )
-
-        self.precautions_frame.get_selected_precautions_callback = (
-            controller.get_selected_precautions
-        )
-
-        self.precautions_frame.append_precautions_variables = (
-            controller.append_precautions_variables
-        )
-        self.precautions_frame.submission_callback = controller.on_submission
-
-        controller.set_get_pdf_path_callback(self.get_file_path)
 
     def display_success(self, message):
         messagebox.showinfo("Success!", message)

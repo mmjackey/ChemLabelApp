@@ -1,4 +1,4 @@
-class Hazards_precaution_data:
+class HazardsPrecautionData:
     def __init__(self):
         self.selected_hazards = []
         self.selected_precautions = []

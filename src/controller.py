@@ -1,20 +1,16 @@
-from models.database import Database
-from models.hazard_data import Hazards_precaution_data
-from models.pdf_generator import PDF_generator
-
-
 class Controller:
-    def __init__(self, view):
-        self.view = view
+    def __init__(self, Database, PDFGenerator, HazardsPrecautionsData):
+        self.view = None
 
-        self.database = Database()
-        self.pdf_generator = PDF_generator()
-        self.hazard_precautions_data = Hazards_precaution_data()
+        self.database = Database
+        self.pdf_generator = PDFGenerator
+        self.hazard_precautions_data = HazardsPrecautionsData
 
-        self.view.set_callbacks(self)
+    def get_hazard_classes_dict(self):
+        return self.hazard_precautions_data.HAZARD_CLASSES
 
-    def handle_submit_pdf(self):
-        pass
+    def get_precaution_classes_dict(self):
+        return self.hazard_precautions_data.PRECAUTION_CLASSES
 
     def get_hazards(self, hazard_type):
         return self.hazard_precautions_data.HAZARD_CLASSES.get(hazard_type, [])
@@ -38,7 +34,7 @@ class Controller:
             precaution_type, []
         )
 
-    def set_get_pdf_path_callback(self, file_dialog_callback):
+    def set_get_pdf_path(self, file_dialog_callback):
         self.pdf_generator.save_pdf_callback = file_dialog_callback
 
     def on_submission(self):
@@ -55,3 +51,6 @@ class Controller:
         )
 
         self.view.display_success("PDF generated successfully!")
+
+    def get_database_column_names(self, table):
+        return self.database.fetch_column_names(table)

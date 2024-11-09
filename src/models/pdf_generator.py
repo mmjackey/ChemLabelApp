@@ -19,7 +19,7 @@ from pylatex.utils import NoEscape
 from config import AppConfig
 
 
-class PDF_generator:
+class PDFGenerator:
     def __init__(self):
         self.save_pdf_callback = None
 
