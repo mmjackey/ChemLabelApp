@@ -6,11 +6,17 @@ class Controller:
         self.pdf_generator = PDFGenerator
         self.hazard_precautions_data = HazardsPrecautionsData
 
+    def get_item_type_tables(self):
+        return self.database.item_type_tables
+
     def get_hazard_classes_dict(self):
         return self.hazard_precautions_data.HAZARD_CLASSES
 
     def get_precaution_classes_dict(self):
         return self.hazard_precautions_data.PRECAUTION_CLASSES
+
+    def get_hazard_diamonds_dict(self):
+        return self.hazard_precautions_data.HAZARD_DIAMONDS
 
     def get_hazards(self, hazard_type):
         return self.hazard_precautions_data.HAZARD_CLASSES.get(hazard_type, [])
@@ -33,6 +39,12 @@ class Controller:
         return self.hazard_precautions_data.PRECAUTION_CLASSES.get(
             precaution_type, []
         )
+
+    def append_diamond_variables(self, var, hazard):
+        self.hazard_precautions_data.diamond_vars.append((var, hazard))
+
+    def get_diamond_vars(self):
+        return self.hazard_precautions_data.diamond_vars
 
     def set_get_pdf_path(self, file_dialog_callback):
         self.pdf_generator.save_pdf_callback = file_dialog_callback

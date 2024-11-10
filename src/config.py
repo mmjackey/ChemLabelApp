@@ -13,6 +13,8 @@ class AppConfig:
 
     IMAGES = RESOURCES / "images"
 
+    HAZARD_IMAGES = IMAGES / "hazard_diamonds"
+
     SOFAB_LOGO = IMAGES / "sofab_logo.png"
 
     FLAME = IMAGES / "Flame.png"

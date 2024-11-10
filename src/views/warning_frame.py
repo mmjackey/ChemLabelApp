@@ -1,9 +1,11 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import PhotoImage, ttk
+
+from PIL import Image, ImageTk
 
 
 class HazardPrecautionFrame(tk.Frame):
-    def __init__(self, parent, controller, warning_dict):
+    def __init__(self, parent, controller, warning_dict, images=False):
         super().__init__(parent)
 
         first_key = list(warning_dict.keys())[0]
@@ -25,6 +27,8 @@ class HazardPrecautionFrame(tk.Frame):
             self.warning_type = "Hazard"
         elif "precautionary" in first_key.lower():
             self.warning_type = "Precaution"
+        elif "diamond" in first_key.lower():
+            self.warning_type = "Diamond"
 
         self.select_warning_label = ttk.Label(
             self, text=f"Select {self.warning_type} Type:"
@@ -40,11 +44,14 @@ class HazardPrecautionFrame(tk.Frame):
         for i, warning_type in enumerate(list(warning_dict.keys())):
             if i == 0:
                 frame = WarningClassCheckboxes(
-                    self, warning_dict[warning_type], default_class=True
+                    self,
+                    warning_dict[warning_type],
+                    default_class=True,
+                    images=images,
                 )
             else:
                 frame = WarningClassCheckboxes(
-                    self, warning_dict[warning_type]
+                    self, warning_dict[warning_type], images=images
                 )
             self.warning_type_frames[warning_type] = frame
 
@@ -71,6 +78,8 @@ class HazardPrecautionFrame(tk.Frame):
             warning_vars = self.controller.get_selected_hazards()
         elif self.warning_type == "Precaution":
             warning_vars = self.controller.get_selected_precautions()
+        elif self.warning_type == "Diamond":
+            warning_vars = self.controller.get_diamond_vars()
 
         if warning_vars is not None:
             for var, label in warning_vars:
@@ -81,32 +90,46 @@ class HazardPrecautionFrame(tk.Frame):
 
 
 class WarningClassCheckboxes(tk.Frame):
-    def __init__(self, parent, warning_items, default_class=False):
+    def __init__(
+        self, parent, warning_items, default_class=False, images=False
+    ):
         super().__init__(parent)
-
         self.parent = parent
         self.warning_items = warning_items
 
-        self.generate_checkboxes()
+        self.generate_checkboxes(images=images)
 
         if default_class:
             self.grid(row=2, column=0, columnspan=2, padx=10, pady=5)
 
-    def generate_checkboxes(self):
+    def generate_checkboxes(self, images=False):
         self.checkboxes_frame = tk.Frame(self)
         self.checkboxes_frame.grid(row=0, column=0)
 
         for item in self.warning_items:
+            if images:
+                image = Image.open(item[1])
+                resized_image = image.resize((100, 100), Image.LANCZOS)
+                self.image = ImageTk.PhotoImage(resized_image)
+                item = item[0]
+            else:
+                self.image = None
             var = tk.BooleanVar()
             checkbox = ttk.Checkbutton(
                 self.checkboxes_frame,
                 text=item,
+                image=self.image,
+                compound="left",
                 variable=var,
                 command=lambda var=var: self.parent.update_text_box(),
             )
+            checkbox.image = self.image
+
             checkbox.pack(anchor="w", fill="x")
             # Keep track of checkbox vars and labels
             if self.parent.warning_type == "Hazard":
                 self.parent.controller.append_hazard_variables(var, item)
             elif self.parent.warning_type == "Precaution":
                 self.parent.controller.append_precautions_variables(var, item)
+            elif self.parent.warning_type == "Diamond":
+                self.parent.controller.append_diamond_variables(var, item)

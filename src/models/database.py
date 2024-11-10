@@ -3,6 +3,21 @@ import psycopg2
 
 class Database:
     def __init__(self):
+
+        self.item_type_tables = {
+            "Chemical Inventory": ["chemical_inventory", "general_product"],
+            "General Inventory": ["general_inventory", "general_product"],
+            "Product Inventory (Batch Process)": [
+                "batch_inventory",
+                "synthesis",
+                "washing",
+                "drying",
+                "functionalization",
+                "quality_control",
+                "shipping",
+            ],
+        }
+
         self.conn = psycopg2.connect(
             database="inventory_management",
             user="postgres",

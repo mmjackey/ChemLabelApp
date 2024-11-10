@@ -1,7 +1,11 @@
+from config import AppConfig
+
+
 class HazardsPrecautionData:
     def __init__(self):
         self.selected_hazards = []
         self.selected_precautions = []
+        self.diamond_vars = []
 
         self.HAZARD_CLASSES = {
             "Physical Hazards (H2)": [
@@ -134,6 +138,52 @@ class HazardsPrecautionData:
                 "P502 Refer to manufacturer or supplier for information on recovery or recycling.",
                 "P503 Refer to manufacturer/supplier... for information on disposal/recovery/recycling.",
             ],
+        }
+
+        EXPLOSIVES_PATH = AppConfig.HAZARD_IMAGES / "explosives.png"
+        GASSES_PATH = AppConfig.HAZARD_IMAGES / "gasses.png"
+        FLAMMABLE_LIQUIDS_PATH = (
+            AppConfig.HAZARD_IMAGES / "flammable liquids.png"
+        )
+        FLAMMABLES_PATH = AppConfig.HAZARD_IMAGES / "flammables.png"
+        OXIDIZING_SUBSTANCE_PATH = (
+            AppConfig.HAZARD_IMAGES / "exclamation hazard.png"
+        )
+        TOXIC_SUBSTANCES_PATH = (
+            AppConfig.HAZARD_IMAGES / "toxic substances.png"
+        )
+        RADIOACTIVE_MATERIALS_PATH = (
+            AppConfig.HAZARD_IMAGES / "environmental hazard.png"
+        )
+        CORROSIVE_SUBSTANCE_PATH = (
+            AppConfig.HAZARD_IMAGES / "corrosive substances.png"
+        )
+        MISCELLANEOUS_PATH = AppConfig.HAZARD_IMAGES / "health hazard.png"
+
+        self.HAZARD_DIAMONDS = {
+            "Diamonds": [
+                ("Class 1 - Explosives", EXPLOSIVES_PATH),
+                ("Class 2 - Gasses", GASSES_PATH),
+                ("Class 3 - Flammable liquids", FLAMMABLE_LIQUIDS_PATH),
+                ("Class 4 - Flammable solids", FLAMMABLES_PATH),
+                (
+                    "Class 5 - Oxidizing substances and Organic peroxides",
+                    OXIDIZING_SUBSTANCE_PATH,
+                ),
+                (
+                    "Class 6 - Toxic* substances and Infectious substances",
+                    TOXIC_SUBSTANCES_PATH,
+                ),
+                (
+                    "Class 7 - Radioactive materials",
+                    RADIOACTIVE_MATERIALS_PATH,
+                ),
+                ("Class 8 - Corrosive substances", CORROSIVE_SUBSTANCE_PATH),
+                (
+                    "Class 9 - Miscellaneous dangerous goods/hazardous materials and articles",
+                    MISCELLANEOUS_PATH,
+                ),
+            ]
         }
 
     def add_hazard(self, hazard):

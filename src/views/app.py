@@ -21,32 +21,34 @@ class App(Tk):
         self.notebook.pack(fill="both", expand=True)
         self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_selection)
 
-        item_types = {
-            "Chemical Inventory": ["chemical_inventory", "general_product"],
-            "General Inventory": ["general_inventory", "general_product"],
-            "Product Inventory (Batch Process)": [
-                "batch_inventory",
-                "synthesis",
-                "washing",
-                "drying",
-                "functionalization",
-                "quality_control",
-                "shipping",
-            ],
-        }
+        item_type_tables = self.controller.get_item_type_tables()
 
-        self.item_frame_container = ItemFrameContainer(controller, item_types)
+        self.item_frame_container = ItemFrameContainer(
+            controller, item_type_tables
+        )
         self.notebook.add(self.item_frame_container, text="Item Details")
 
+        hazard_warnings = self.controller.get_hazard_classes_dict()
+
         self.hazard_frame = HazardPrecautionFrame(
-            self, controller, self.controller.get_hazard_classes_dict()
+            self, controller, warning_dict=hazard_warnings
         )
         self.notebook.add(self.hazard_frame, text="Hazard Details")
 
+        precaution_warnings = self.controller.get_precaution_classes_dict()
+
         self.precautions_frame = HazardPrecautionFrame(
-            self, controller, self.controller.get_precaution_classes_dict()
+            self, controller, warning_dict=precaution_warnings
         )
         self.notebook.add(self.precautions_frame, text="Precautionary Details")
+
+        hazard_diamonds = self.controller.get_hazard_diamonds_dict()
+
+        self.hazard_diamonds_frame = HazardPrecautionFrame(
+            self, controller, warning_dict=hazard_diamonds, images=True
+        )
+
+        self.notebook.add(self.hazard_diamonds_frame, text="Hazard Diamonds")
 
     def on_tab_selection(self, event):
         selected_tab = event.widget.select()

@@ -80,20 +80,55 @@ class ItemFrame(tk.Frame):
 
         self.controller = controller
 
+        self.table_names = table_names
+
         self.entry_vars = {}
 
         self.entries_containter = tk.Frame(self)
         self.entries_containter.grid(row=0, column=0)
 
-        table_columns_dict = self.controller.get_database_column_names(
-            table_names
+        self.add_content()
+
+        self.checkbox_var = tk.BooleanVar()
+        self.checkbox = ttk.Checkbutton(
+            self.entries_containter,
+            text="Add to database",
+            variable=self.checkbox_var,
         )
 
+        checkbox_location = self.entries_containter.grid_size()[1]
+
+        self.checkbox.grid(row=checkbox_location, column=1, padx=10, pady=5)
+
+    def add_content(self):
+        table_columns_dict = self.controller.get_database_column_names(
+            self.table_names
+        )
+
+        """
+        for each type of item (general product, general inventory, or chemical inventory),
+        we query each of the tables associated with these items and dynamicall print
+        a label and an entry for each column in each table
+        """
+
         for i, (key, column_list) in enumerate(table_columns_dict.items()):
-            formatted_table_columns = [
-                col.replace("_", " ").title() for col in column_list
-            ]
+            table_label_text = self.label_tables(key, i)
+
+            formatted_table_columns = self.format_names(column_list)
+
             for j, column in enumerate(column_list):
+                if "id" in column.lower() or "hazard" in column.lower():
+                    continue
+                elif "fk" in column.lower():
+                    words = column.lower().split("_")
+                    words.remove("fk")
+                    for word in words:
+                        if word in table_label_text.lower():
+                            words.remove(word)
+                    # whatever remains after removing the label text
+                    # and fk, should be the contents of the entry box
+                    formatted_table_columns[j] = words[0].title()
+
                 label = ttk.Label(
                     self.entries_containter,
                     text=formatted_table_columns[j],
@@ -105,17 +140,21 @@ class ItemFrame(tk.Frame):
 
                 self.entry_vars[column] = entry
 
-        self.checkbox_var = tk.BooleanVar()
-        self.checkbox = ttk.Checkbutton(
+    def label_tables(self, key, i):
+        table_label_text = f"{self.format_names(key)} \n    Information"
+
+        self.table_label = ttk.Label(
             self.entries_containter,
-            text="Add to database",
-            variable=self.checkbox_var,
-            command=self.checkbox_checked,
+            text=table_label_text,
         )
+        self.table_label.grid(row=0, column=i)
+        return table_label_text
 
-        checkbox_location = self.entries_containter.grid_size()[1]
-
-        self.checkbox.grid(row=checkbox_location, column=1, padx=10, pady=5)
+    def format_names(self, names):
+        if type(names) is list:
+            return [name.replace("_", " ").title() for name in names]
+        elif type(names) is str:
+            return names.replace("_", " ").title()
 
     def get_item_details(self):
         details = {
@@ -128,9 +167,3 @@ class ItemFrame(tk.Frame):
             "stage": self.stage_entry.get(),
         }
         return details
-
-    def checkbox_checked(self):
-        if self.checkbox_var.get():
-            pass
-        else:
-            pass
