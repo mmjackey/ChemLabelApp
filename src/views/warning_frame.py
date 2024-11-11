@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import PhotoImage, ttk
+from tkinter import ttk
 
 from PIL import Image, ImageTk
 
@@ -82,7 +82,7 @@ class HazardPrecautionFrame(tk.Frame):
             warning_vars = self.controller.get_diamond_vars()
 
         if warning_vars is not None:
-            for var, label in warning_vars:
+            for var, label, *rest in warning_vars:
                 if var.get():
                     text += f"{label}\n"
             self.text_box.delete("1.0", tk.END)  # Clear the existing text
@@ -110,20 +110,20 @@ class WarningClassCheckboxes(tk.Frame):
             if images:
                 image = Image.open(item[1])
                 resized_image = image.resize((100, 100), Image.LANCZOS)
-                self.image = ImageTk.PhotoImage(resized_image)
+                image = ImageTk.PhotoImage(resized_image)
                 item = item[0]
             else:
-                self.image = None
+                image = None
             var = tk.BooleanVar()
             checkbox = ttk.Checkbutton(
                 self.checkboxes_frame,
                 text=item,
-                image=self.image,
+                image=image,
                 compound="left",
                 variable=var,
                 command=lambda var=var: self.parent.update_text_box(),
             )
-            checkbox.image = self.image
+            checkbox.image = image
 
             checkbox.pack(anchor="w", fill="x")
             # Keep track of checkbox vars and labels
@@ -132,4 +132,6 @@ class WarningClassCheckboxes(tk.Frame):
             elif self.parent.warning_type == "Precaution":
                 self.parent.controller.append_precautions_variables(var, item)
             elif self.parent.warning_type == "Diamond":
-                self.parent.controller.append_diamond_variables(var, item)
+                self.parent.controller.append_diamond_variables(
+                    var, item, image
+                )

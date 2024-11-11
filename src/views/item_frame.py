@@ -8,6 +8,8 @@ class ItemFrameContainer(tk.Frame):
 
         self.controller = controller
 
+        self.item_types = item_types
+
         """
         Configure grid weights so that the items expand and contract with
         window
@@ -17,9 +19,9 @@ class ItemFrameContainer(tk.Frame):
         self.columnconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
 
-        self.item_type_var = tk.StringVar(
-            value="Chemical Inventory"
-        )  # Default value
+        first_key = list(item_types.keys())[0]
+
+        self.item_type_var = tk.StringVar(value=first_key)  # Default value
 
         self.item_type_menu = tk.OptionMenu(
             self, self.item_type_var, *item_types.keys()
@@ -155,15 +157,3 @@ class ItemFrame(tk.Frame):
             return [name.replace("_", " ").title() for name in names]
         elif type(names) is str:
             return names.replace("_", " ").title()
-
-    def get_item_details(self):
-        details = {
-            "name": self.batch_entry.get(),
-            "volume": self.volume_entry.get(),
-            "concentration": self.concentration_entry.get(),
-            "barcode input": self.barcode_entry.get(),
-            "qr code input": self.qr_code_entry.get(),
-            "page size": self.page_size_var.get(),
-            "stage": self.stage_entry.get(),
-        }
-        return details

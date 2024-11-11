@@ -3,6 +3,7 @@ from tkinter import Tk, filedialog, messagebox, ttk
 from ttkbootstrap import Style
 
 from views.item_frame import ItemFrameContainer
+from views.submission_frame import SubmitFrame
 from views.warning_frame import HazardPrecautionFrame
 
 
@@ -16,10 +17,13 @@ class App(Tk):
         self.style = Style(theme="darkly")
 
         self.controller = controller
+        self.controller.set_view(self)
 
         self.notebook = ttk.Notebook()
         self.notebook.pack(fill="both", expand=True)
         self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_selection)
+
+        # filling the notebook (top tabs) with frames
 
         item_type_tables = self.controller.get_item_type_tables()
 
@@ -49,6 +53,9 @@ class App(Tk):
         )
 
         self.notebook.add(self.hazard_diamonds_frame, text="Hazard Diamonds")
+
+        self.submit_frame = SubmitFrame(controller)
+        self.notebook.add(self.submit_frame, text="Submission Frame")
 
     def on_tab_selection(self, event):
         selected_tab = event.widget.select()
