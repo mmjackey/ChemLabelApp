@@ -3,6 +3,7 @@ from models.database import Database
 from models.hazard_data import HazardsPrecautionData
 from models.pdf_generator import PDFGenerator
 from views.app import App
+from views.myapp import MyApp
 
 
 def main():
@@ -15,7 +16,9 @@ def main():
         database_model, pdf_generator, hazard_precaution_data
     )
 
-    app = App(controller)
+    #Old - App(controller)
+    #New - MyApp(controller)
+    app = MyApp(controller)
 
     app.mainloop()
 

@@ -7,7 +7,6 @@ from PIL import Image, ImageTk
 class HazardPrecautionFrame(tk.Frame):
     def __init__(self, parent, controller, warning_dict, images=False):
         super().__init__(parent)
-
         first_key = list(warning_dict.keys())[0]
 
         self.controller = controller

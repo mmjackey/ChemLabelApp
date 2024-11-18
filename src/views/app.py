@@ -1,3 +1,4 @@
+from customtkinter import *
 from tkinter import Tk, filedialog, messagebox, ttk
 
 from ttkbootstrap import Style
@@ -7,14 +8,16 @@ from views.submission_frame import SubmitFrame
 from views.warning_frame import HazardPrecautionFrame
 
 
-class App(Tk):
+class App(CTk):
     def __init__(self, controller):
         # initializing the Tk class instance
         super().__init__()
 
         self.title("SoFab Inventory Managment System")
 
-        self.style = Style(theme="darkly")
+        set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
+        set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
+        #self.style = Style(theme="darkly")
 
         self.controller = controller
         self.controller.set_view(self)
@@ -33,6 +36,7 @@ class App(Tk):
         self.notebook.add(self.item_frame_container, text="Item Details")
 
         hazard_warnings = self.controller.get_hazard_classes_dict()
+        print(hazard_warnings)
 
         self.hazard_frame = HazardPrecautionFrame(
             self, controller, warning_dict=hazard_warnings

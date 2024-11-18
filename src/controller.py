@@ -81,9 +81,9 @@ class Controller:
             selected_hazards = self.get_selected_hazards()
             selected_precautions = self.get_selected_precautions()
 
-        # self.pdf_generator.generate_pdf(
-        #     details, selected_hazards, selected_precautions
-        # )
+        self.pdf_generator.generate_pdf(
+            details, selected_hazards, selected_precautions
+        )
 
         self.view.display_success("PDF generated successfully!")
 

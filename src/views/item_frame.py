@@ -1,3 +1,4 @@
+from customtkinter import *
 import tkinter as tk
 from tkinter import ttk
 
@@ -86,13 +87,30 @@ class ItemFrame(tk.Frame):
 
         self.entry_vars = {}
 
-        self.entries_containter = tk.Frame(self)
+        #Scrollbar Additions
+        # self.canvas = tk.Canvas(self,height=700)
+        # self.scrollbar = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        # self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        # self.grid_rowconfigure(0, weight=1)
+        # self.grid_columnconfigure(0, weight=1)
+        
+        # self.canvas.grid(row=0, column=0, sticky="nsew")
+        # self.scrollbar.grid(row=0, column=1, sticky="ns")
+        
+        self.entries_containter = CTkFrame(self)
         self.entries_containter.grid(row=0, column=0)
+
+        # self.canvas.create_window((0, 0), window=self.entries_containter, anchor="nw")
+
+        # self.entries_containter.bind("<Configure>", self.on_frame_configure)
+
+        # print("Width:", self.canvas.winfo_width())
+        # print("Height:", self.canvas.winfo_height())
 
         self.add_content()
 
         self.checkbox_var = tk.BooleanVar()
-        self.checkbox = ttk.Checkbutton(
+        self.checkbox = CTkCheckBox(
             self.entries_containter,
             text="Add to database",
             variable=self.checkbox_var,
@@ -103,6 +121,7 @@ class ItemFrame(tk.Frame):
         self.checkbox.grid(row=checkbox_location, column=1, padx=10, pady=5)
 
     def add_content(self):
+        print(self.table_names)
         table_columns_dict = self.controller.get_database_column_names(
             self.table_names
         )
@@ -117,7 +136,6 @@ class ItemFrame(tk.Frame):
             table_label_text = self.label_tables(key, i)
 
             formatted_table_columns = self.format_names(column_list)
-
             for j, column in enumerate(column_list):
                 if "id" in column.lower() or "hazard" in column.lower():
                     continue
@@ -131,13 +149,13 @@ class ItemFrame(tk.Frame):
                     # and fk, should be the contents of the entry box
                     formatted_table_columns[j] = words[0].title()
 
-                label = ttk.Label(
+                label = CTkLabel(
                     self.entries_containter,
                     text=formatted_table_columns[j],
                 )
                 label.grid(row=2 * j, column=i, padx=10, pady=5)
 
-                entry = ttk.Entry(self.entries_containter)
+                entry = CTkEntry(self.entries_containter)
                 entry.grid(row=2 * j + 1, column=i, padx=10, pady=5)
 
                 self.entry_vars[column] = entry
@@ -145,7 +163,7 @@ class ItemFrame(tk.Frame):
     def label_tables(self, key, i):
         table_label_text = f"{self.format_names(key)} \n    Information"
 
-        self.table_label = ttk.Label(
+        self.table_label = CTkLabel(
             self.entries_containter,
             text=table_label_text,
         )
@@ -157,3 +175,7 @@ class ItemFrame(tk.Frame):
             return [name.replace("_", " ").title() for name in names]
         elif type(names) is str:
             return names.replace("_", " ").title()
+
+    def on_frame_configure(self, event):
+        """Update scroll region when the content frame is resized."""
+        self.canvas.config(scrollregion=self.canvas.bbox("all"))
