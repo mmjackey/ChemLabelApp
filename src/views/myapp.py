@@ -508,18 +508,7 @@ class WarningClassCheckboxes(customtkinter.CTkScrollableFrame):
                 self.parent.controller.append_hazard_variables(var, item)
             elif self.parent.warning_type == "Precaution":
                 self.parent.controller.append_precautions_variables(var, item)
-            elif self.parent.warning_type == "Diamond":
-                self.parent.controller.append_diamond_variables(
-                    var, item, image
-                )
-        
-            
-            
-            
-           
-
-            
-
+             
     def show_checkboxes(self, event=None):
         pass
 
