@@ -16,8 +16,8 @@ def main():
         database_model, pdf_generator, hazard_precaution_data
     )
 
-    #Old - App(controller)
-    #New - MyApp(controller)
+    # Old - App(controller)
+    # New - MyApp(controller)
     app = MyApp(controller)
 
     app.mainloop()
