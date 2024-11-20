@@ -114,6 +114,7 @@ class MyApp(customtkinter.CTk):
         # Contains hazard diamond symbols
         self.create_area_3(self.controller, hazard_diamonds)
 
+        self.stored_preview_text = ""
         # Contains Preview box and orientation selection
         self.create_area_4()
 
@@ -122,7 +123,12 @@ class MyApp(customtkinter.CTk):
         table_columns_dict = self.controller.get_database_column_names(
             self.table_types[table_name]
         )
-        
+
+        if table_columns_dict:
+            self.controller.set_tab(table_name)
+            
+        #print(self.controller.get_tab_info())
+
         #Store all EntryBox widgets
         self.entry_vars = {}
 
@@ -143,7 +149,7 @@ class MyApp(customtkinter.CTk):
 
         self.area_1_header = customtkinter.CTkLabel(
             self.area_1,
-            text="Chemical Inventory",
+            text=table_name,
             font=customtkinter.CTkFont(size=18, weight="bold"),
         )
         self.area_1_header.grid(row=0, column=0, padx=10, pady=10, sticky="w")
@@ -156,7 +162,7 @@ class MyApp(customtkinter.CTk):
         for i, (key, column_list) in enumerate(table_columns_dict.items()):
             # table_label_text = self.label_tables(key, i)
             formatted_table_columns = self.format_names(column_list)
-
+            print(formatted_table_columns)
             for j, column in enumerate(column_list):
                 # print(j," ",column)
                 if "id" in column.lower() or "hazard" in column.lower():
@@ -321,7 +327,7 @@ class MyApp(customtkinter.CTk):
         )
 
         #Preview Label frame 
-        self.preview_label_frame = customtkinter.CTkFrame(self.area_4,fg_color="gray")
+        self.preview_label_frame = customtkinter.CTkFrame(self.area_4,fg_color="white")
         self.preview_label_frame.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
 
         # Set initial landscape preview
@@ -376,7 +382,22 @@ class MyApp(customtkinter.CTk):
 
     # Switch between Chemical/General Inventory
     def sidebar_button_event(self, button_name):
+
+        #Refresh areas - Keep preview visible
+        if button_name == "Chemical Inventory":
+            self.area_2.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
+            self.area_3.grid(row=3, column=0, sticky="nsew", padx=10, pady=10)
+            self.area_5.grid(
+            row=2, column=1, columnspan=2, sticky="nsew", padx=10, pady=10
+            )
+        if button_name == "General Inventory":
+            self.area_2.grid_forget()
+            self.area_3.grid_forget()
+            self.area_5.grid_forget()
         self.create_area_1(button_name)
+
+        #Refresh preview label
+        self.clear_preview_box()
     
     def update_key_details(self, *args):
         
@@ -430,7 +451,7 @@ class MyApp(customtkinter.CTk):
         self.preview_label_frame.grid_propagate(False)
         self.create_preview_label(self.orientation_option_menu.get())
 
-    def create_preview_label(self, selection):
+    def create_preview_label(self, selection,hazards=True):
         if selection == "Landscape":
 
             self.preview_label_frame.grid_columnconfigure(0, weight=1)
@@ -482,6 +503,7 @@ class MyApp(customtkinter.CTk):
             self.new_label_below = customtkinter.CTkLabel(
                 self.preview_label_frame, 
                 text="Concentration:",  # Multiline text
+                text_color="black",
                 anchor="w" 
             )
             self.new_label_below.grid(row=1, column=0, padx=10, sticky="w")
@@ -489,6 +511,7 @@ class MyApp(customtkinter.CTk):
             self.new_label_below2 = customtkinter.CTkLabel(
                 self.preview_label_frame, 
                 text="Date Created:",  # Multiline text
+                text_color="black",
                 anchor="w" 
             )
             self.new_label_below2.grid(row=2, column=0, padx=10, sticky="w")
@@ -496,10 +519,16 @@ class MyApp(customtkinter.CTk):
 
             self.hazards_preview_textbox = customtkinter.CTkTextbox(
                 self.preview_label_frame, 
-                height=100,
+                height=150,
+                fg_color="transparent",
+                text_color="black",
             )
-            self.hazards_preview_textbox.grid(row=3, column=0, columnspan=3,padx=10, sticky="w")
+            self.hazards_preview_textbox.grid(row=3, column=0, columnspan=3, padx=2,sticky="ew")
 
+            if hazards:
+                self.hazards_preview_textbox.insert(tk.END,self.stored_preview_text)
+            else:
+                self.hazards_preview_textbox.delete("1.0", tk.END)
             self.preview_label_frame.grid_columnconfigure(2, weight=1)  #Empty
 
             
@@ -507,6 +536,10 @@ class MyApp(customtkinter.CTk):
         text=args
         self.hazards_preview_textbox.delete("1.0", tk.END)  # Clear the existing text
         self.hazards_preview_textbox.insert(tk.END, text)  # Insert the updated text
+        self.stored_preview_text = text
+    
+    def clear_preview_box(self):
+        self.create_preview_label(self.orientation_option_menu.get(),hazards=False)
 
 class HazardPrecautionFrame(customtkinter.CTkFrame):
     def __init__(self, parent, controller, warning_dict, root, images=False):

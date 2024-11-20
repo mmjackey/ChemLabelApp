@@ -6,6 +6,7 @@ class Controller:
         self.pdf_generator = PDFGenerator
         self.hazard_precautions_data = HazardsPrecautionsData
         self.area_1_entries = {}
+        self.cur_tab = {}
 
     def get_item_type_tables(self):
         return self.database.item_type_tables
@@ -58,6 +59,12 @@ class Controller:
     def get_data_entries(self):
         return self.area_1_entries
 
+    def set_tab(self,table_name):
+        self.cur_tab = self.get_item_type_tables()[table_name]
+    
+    def get_tab_info(self):
+        return self.cur_tab
+    
     def set_get_pdf_path(self, file_dialog_callback):
         self.pdf_generator.save_pdf_callback = file_dialog_callback
 
