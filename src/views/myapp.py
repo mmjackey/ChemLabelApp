@@ -4,7 +4,7 @@ from tkinter import Tk, filedialog, messagebox, ttk
 import customtkinter
 from PIL import Image, ImageTk
 
-# from config import AppConfig
+from config import AppConfig
 
 # from ttkbootstrap import Style
 
@@ -47,9 +47,8 @@ class MyApp(customtkinter.CTk):
         self.topbar_frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
         # SOFAB LOGO
-        self.logo_image = Image.open(
-            "C:/Users/Blake/Documents/ChemLabelApp/resources/images/sofab_logo.png"
-        )
+        self.logo_image = Image.open(AppConfig.SOFAB_LOGO)
+
         self.logo_image = self.logo_image.resize((160, 40))
         self.logo_photo = ImageTk.PhotoImage(self.logo_image)
         self.logo_label = customtkinter.CTkLabel(
