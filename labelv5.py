@@ -391,7 +391,7 @@ def setup_interface():
         ),
     )
 
-    notebook.pack(expand=true, fill="both")
+    notebook.pack(expand=True, fill="both")
 
 
 #######################################################################
