@@ -46,15 +46,11 @@ class MyApp(customtkinter.CTk):
         )
         self.topbar_frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
-        # SOFAB LOGO
-        self.logo_image = Image.open(
-            "C:/Users/Blake/Documents/ChemLabelApp/resources/images/sofab_logo.png"
-        )
-        self.logo_image = self.logo_image.resize((160, 40))
-        self.logo_photo = ImageTk.PhotoImage(self.logo_image)
-        self.logo_label = customtkinter.CTkLabel(
-            self.topbar_frame, image=self.logo_photo, text=""
-        )  # Empty text for the image
+        #SOFAB LOGO
+        self.logo_image = Image.open("C:/Users/Blake/Documents/ChemLabelApp/resources/images/sofab_logo.png")
+        self.logo_image2 = Image.open("resources\images\sofab_logo2.png")
+        self.logo_photo = customtkinter.CTkImage(dark_image=self.logo_image, size=(160,40))
+        self.logo_label = customtkinter.CTkLabel(self.topbar_frame, image=self.logo_photo, text="")  # Empty text for the image
         self.logo_label.grid(row=0, column=0, padx=10, pady=10)
 
         # Change key items (area 1)
@@ -78,9 +74,9 @@ class MyApp(customtkinter.CTk):
 
         # Sumbit to PDF (Not functional)
         self.submit_button = customtkinter.CTkButton(
-            self.topbar_frame,
-            text="Submit",
-            command=lambda: self.submit_button_event(),
+            self.topbar_frame, 
+            text="Submit", 
+            command=lambda: self.on_submit(),
             fg_color="transparent",
             border_width=0,
         )
@@ -126,13 +122,15 @@ class MyApp(customtkinter.CTk):
         table_columns_dict = self.controller.get_database_column_names(
             self.table_types[table_name]
         )
-
+        
+        #Store all EntryBox widgets
         self.entry_vars = {}
 
-        # Other
-        self.area_1 = customtkinter.CTkFrame(
-            self.window_frame, corner_radius=10
-        )
+        # *Important* - Store entrybox values (when they change)
+        #self.area_1_entries = {}
+
+        #Other
+        self.area_1 = customtkinter.CTkFrame(self.window_frame, corner_radius=10)
         self.area_1.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
 
         # Make columns expandable
@@ -149,15 +147,16 @@ class MyApp(customtkinter.CTk):
             font=customtkinter.CTkFont(size=18, weight="bold"),
         )
         self.area_1_header.grid(row=0, column=0, padx=10, pady=10, sticky="w")
-        # print(f"Header placed Row: {0} | Col: {0}")
-        max_rows_per_column = 6
-        row = 0
+        #print(f"Header placed Row: {0} | Col: {0}")
+        max_rows_per_column = 7
+        row = 1 
         col = 0
+        entry_count = 0
+        self.entry_strings = []
         for i, (key, column_list) in enumerate(table_columns_dict.items()):
             # table_label_text = self.label_tables(key, i)
             formatted_table_columns = self.format_names(column_list)
 
-            row = 1
             for j, column in enumerate(column_list):
                 # print(j," ",column)
                 if "id" in column.lower() or "hazard" in column.lower():
@@ -174,7 +173,7 @@ class MyApp(customtkinter.CTk):
                     # if word in table_label_text.lower():
                     # words.remove(word)
                     formatted_table_columns[j] = words[0].title()
-
+                
                 # Create the label for the column
                 label = customtkinter.CTkLabel(
                     self.area_1, text=formatted_table_columns[j]
@@ -183,11 +182,18 @@ class MyApp(customtkinter.CTk):
                 # print(formatted_table_columns[j],f"Label Placed Row: {row} | Col: {col}")
                 if row == max_rows_per_column - 1:
                     label.grid(row=row, column=col, padx=20, pady=5)
+                
+                sv = customtkinter.StringVar()
+
+                self.entry_strings.append(sv)
+                sv.trace("w", lambda *args, name=formatted_table_columns[j], index=entry_count: self.update_key_details(name,index))
+
 
                 # Create the entry for the column
-                entry = customtkinter.CTkEntry(self.area_1)
-                entry.grid(row=row, column=col + 1, padx=10, pady=5)
-                # print(formatted_table_columns[j],f"Entry Placed Row: {row} | Col: {col+1}")
+                entry = customtkinter.CTkEntry(self.area_1,textvariable=sv)
+                entry.grid(row=row, column=col+1, padx=10, pady=5)
+                
+                #print(formatted_table_columns[j],f"Entry Placed Row: {row} | Col: {col+1}")
                 if row == max_rows_per_column - 1:
                     entry.grid(row=row, column=col + 1, padx=10, pady=5)
 
@@ -195,17 +201,16 @@ class MyApp(customtkinter.CTk):
                 self.entry_vars[column] = entry
 
                 row += 1
-
+                entry_count += 1
                 if row >= max_rows_per_column:
                     row = 1
-                    col += 2
-        # self.add_content()
-
-    # Second area - Select warning items (hazards and precautions)
-    def create_area_2(self, controller, hazards, precautions):
-        self.area_2 = customtkinter.CTkFrame(
-            self.window_frame, corner_radius=10
-        )
+                    col += 2 
+            
+        #self.add_content()
+    
+    #Second area - Select warning items (hazards and precautions)
+    def create_area_2(self, controller,hazards,precautions):
+        self.area_2 = customtkinter.CTkFrame(self.window_frame, corner_radius=10)
         self.area_2.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
 
         # Make columns expandable
@@ -315,18 +320,16 @@ class MyApp(customtkinter.CTk):
             row=1, column=0, sticky="nsew", padx=10, pady=10
         )
 
-        # Preview Label frame
-        self.preview_label_frame = customtkinter.CTkFrame(
-            self.area_4, fg_color="white"
-        )
-        self.preview_label_frame.grid(
-            row=2, column=0, sticky="nsew", padx=10, pady=10
-        )
+        #Preview Label frame 
+        self.preview_label_frame = customtkinter.CTkFrame(self.area_4,fg_color="gray")
+        self.preview_label_frame.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
 
         # Set initial landscape preview
         self.update_frame(self.orientation_option_menu.get())
 
-    # Fifth area - Show Selected Warning Variables
+        self.create_preview_label(self.orientation_option_menu.get())
+    
+    #Fifth area - Show Selected Warning Variables
     def create_area_5(self):
         self.area_5 = customtkinter.CTkFrame(
             self.window_frame, corner_radius=10
@@ -374,12 +377,29 @@ class MyApp(customtkinter.CTk):
     # Switch between Chemical/General Inventory
     def sidebar_button_event(self, button_name):
         self.create_area_1(button_name)
+    
+    def update_key_details(self, *args):
+        
+        #Load StringVar object
+        entry_name = args[0]
+        str_var = self.entry_strings[args[1]]
+        
+        
+        #self.area_1_entries[entry_name] = str_var.get()
+        self.controller.set_data_entries(entry_name,str_var.get())
+        
+        # Do something with the updated value (for now, just print it)
+        #print(f"Entry {args[0]} updated: {str_var.get()}")
+        print(self.controller.get_data_entries())
 
-    # Not quite there yet
-    def submit_button_event(self):
+    #Not quite there yet
+    def on_submit(self):
         print("Print to PDF")
-
-    # Delete later
+        for entry_field in self.entry_vars.keys():
+            #print(f"{entry_field}: {self.entry_vars[entry_field].get()}")
+            entry = self.entry_vars[entry_field].get()
+    
+    #Delete later
     def update_printbox(self):
         pass
 
@@ -404,18 +424,89 @@ class MyApp(customtkinter.CTk):
             )
         elif selection == "Portrait":
             self.text_box.configure(width=200)
-            self.preview_label_frame.configure(
-                width=200, height=400
-            )  # Set portrait dimensions
-            label = customtkinter.CTkLabel(
+            self.preview_label_frame.configure(width=200, height=400)  # Set portrait dimensions
+            label = customtkinter.CTkLabel(self.preview_label_frame, text="Portrait Mode", font=("Arial", 16))
+            self.preview_label_frame.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
+        self.preview_label_frame.grid_propagate(False)
+        self.create_preview_label(self.orientation_option_menu.get())
+
+    def create_preview_label(self, selection):
+        if selection == "Landscape":
+
+            self.preview_label_frame.grid_columnconfigure(0, weight=1)
+            
+            #self.preview_topbar_frame = customtkinter.CTkFrame(self.preview_label_frame,corner_radius=0,height=40)
+            #self.preview_topbar_frame.grid(row=0, column=0, padx=0, pady=0, sticky="nesw")
+            
+            #self.preview_topbar_frame.grid_propagate(False)
+
+            self.preview_label_frame.grid_columnconfigure(0, weight=1)
+            self.preview_label_frame.grid_columnconfigure(1, weight=1)
+            self.preview_label_frame.grid_columnconfigure(2, weight=1)
+            self.preview_label_frame.grid_columnconfigure(3, weight=0)
+
+            self.logo_label_preview = customtkinter.CTkImage(dark_image=self.logo_image2, size=(140,40))
+            self.logo_label = customtkinter.CTkLabel(
+                self.preview_label_frame, 
+                image=self.logo_label_preview, 
+                text=""
+                )  # Empty text for the image
+            self.logo_label.grid(row=0, column=0, padx=10, sticky="w")
+
+            #Barcode Preview Image
+            self.barcode_image_prev = Image.open("barcode.png")
+            self.barcode_photo_prev = customtkinter.CTkImage(dark_image=self.barcode_image_prev, size=(80,80))
+            self.barcode_label_prev = customtkinter.CTkLabel(
                 self.preview_label_frame,
-                text="Portrait Mode",
-                font=("Arial", 16),
-            )
-            self.preview_label_frame.grid(
-                row=2, column=0, sticky="nsew", padx=10, pady=10
+                image=self.barcode_photo_prev,
+                text=""
             )
 
+            #QR Code Preview Image
+            self.qr_code_image_preview = Image.open("C:/Users/Blake/Documents/ChemLabelApp/resources/images/qr_code.png")
+            self.qr_code_preview_photo = customtkinter.CTkImage(dark_image=self.qr_code_image_preview, size=(80,80))
+            self.qr_code_label = customtkinter.CTkLabel(
+                self.preview_label_frame, 
+                image=self.qr_code_preview_photo, 
+                text=""
+            )
+
+            self.preview_label_frame.grid_columnconfigure(0, weight=1)  # This will make the first column take up space
+            self.preview_label_frame.grid_columnconfigure(1, weight=0)
+            self.preview_label_frame.grid_columnconfigure(2, weight=0)
+            
+            self.barcode_label_prev.grid(row=0, column=1, padx=5, pady=5, sticky="w")
+            self.qr_code_label.grid(row=0, column=2,padx=5, sticky="e")
+
+            #Key Details
+            self.new_label_below = customtkinter.CTkLabel(
+                self.preview_label_frame, 
+                text="Concentration:",  # Multiline text
+                anchor="w" 
+            )
+            self.new_label_below.grid(row=1, column=0, padx=10, sticky="w")
+
+            self.new_label_below2 = customtkinter.CTkLabel(
+                self.preview_label_frame, 
+                text="Date Created:",  # Multiline text
+                anchor="w" 
+            )
+            self.new_label_below2.grid(row=2, column=0, padx=10, sticky="w")
+            self.preview_label_frame.grid_rowconfigure(1, weight=0)
+
+            self.hazards_preview_textbox = customtkinter.CTkTextbox(
+                self.preview_label_frame, 
+                height=100,
+            )
+            self.hazards_preview_textbox.grid(row=3, column=0, columnspan=3,padx=10, sticky="w")
+
+            self.preview_label_frame.grid_columnconfigure(2, weight=1)  #Empty
+
+            
+    def update_preview_box(self,args):
+        text=args
+        self.hazards_preview_textbox.delete("1.0", tk.END)  # Clear the existing text
+        self.hazards_preview_textbox.insert(tk.END, text)  # Insert the updated text
 
 class HazardPrecautionFrame(customtkinter.CTkFrame):
     def __init__(self, parent, controller, warning_dict, root, images=False):
@@ -510,19 +601,29 @@ class HazardPrecautionFrame(customtkinter.CTkFrame):
     # Future Idea - Maybe remove textbox clearing when switching warning_type
     def update_text_box(self):
         text = ""
-        if self.warning_type == "Hazard":
-            warning_vars = self.controller.get_selected_hazards()
-        elif self.warning_type == "Precaution":
-            warning_vars = self.controller.get_selected_precautions()
-        elif self.warning_type == "Diamond":
-            warning_vars = self.controller.get_diamond_vars()
+        selections = self.controller.get_haz_prec_diamonds()
+        # if self.warning_type == "Hazard":
+        #     warning_vars = self.controller.get_selected_hazards()
+        # elif self.warning_type == "Precaution":
+        #     warning_vars = self.controller.get_selected_precautions()
+        # elif self.warning_type == "Diamond":
+        #     warning_vars = self.controller.get_diamond_vars()
 
-        if warning_vars is not None:
-            for var, label, *rest in warning_vars:
+        # if warning_vars is not None:
+        #     for var, label, *rest in warning_vars:
+        #         if var.get():
+        #             text += f"{label}\n"
+        #     self.root.text_box.delete("1.0", tk.END)  # Clear the existing text
+        # self.root.text_box.insert(tk.END, text)  # Insert the updated text
+        if selections is not None:
+            for var, label, *rest in selections:
                 if var.get():
                     text += f"{label}\n"
             self.root.text_box.delete("1.0", tk.END)  # Clear the existing text
         self.root.text_box.insert(tk.END, text)  # Insert the updated text
+
+        #Finally, update preview box
+        self.root.update_preview_box(text)
 
 
 class WarningClassCheckboxes(customtkinter.CTkScrollableFrame):
