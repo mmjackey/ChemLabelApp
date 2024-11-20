@@ -5,6 +5,7 @@ class Controller:
         self.database = Database
         self.pdf_generator = PDFGenerator
         self.hazard_precautions_data = HazardsPrecautionsData
+        self.area_1_entries = {}
 
     def get_item_type_tables(self):
         return self.database.item_type_tables
@@ -45,6 +46,17 @@ class Controller:
 
     def get_diamond_vars(self):
         return self.hazard_precautions_data.diamond_vars
+
+    #Get hazards, precautions, and diamonds
+    def get_haz_prec_diamonds(self):
+        return self.get_selected_hazards() + self.get_selected_precautions() + self.get_diamond_vars()
+
+    #Set chemical/general inventory entries 
+    def set_data_entries(self,key,value):
+        self.area_1_entries[key] = value
+
+    def get_data_entries(self):
+        return self.area_1_entries
 
     def set_get_pdf_path(self, file_dialog_callback):
         self.pdf_generator.save_pdf_callback = file_dialog_callback
