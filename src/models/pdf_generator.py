@@ -205,12 +205,15 @@ class PDFGenerator:
             "Concentration": concentration,
         }
 
-        barcode_input = details.get("barcode input")
-        qr_code_input = details.get("qr code input")
+        barcode_input = details.get("barcode_input")
+        qr_code_input = details.get("qr_code_input")
 
-        orientation = details.get("page size")
+        
+        orientation = details.get("page_size")
+        print(orientation)
         orientation = "landscape" if orientation == "Landscape" else "portrait"
-
+        
+        print(f"Printed details: {printed_details} | Barcode Input: {barcode_input} | Qr_Code: {qr_code_input} | Orientation: {orientation}")
         selected_hazards = self.selected_items(hazards)
         selected_precautions = self.selected_items(precautions)
 

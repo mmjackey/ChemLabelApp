@@ -66,7 +66,7 @@ class Database:
         tables = self.cur.fetchall()
         for table in tables:
             print(table[0].title())
-            if "chemical_details" in table[0].lower():
+            if "batch_inventory" in table[0].lower():
                 self.cur.execute(
                 f"""SELECT column_name, data_type
                 FROM information_schema.columns
@@ -78,6 +78,33 @@ class Database:
                 for column, data_type in vals:
                     print(f"  - Column: {column}, Type: {data_type}")
     
+    def get_latest_barcode_id(self):
+        self.cur.execute(
+        """SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+            AND table_type = 'BASE TABLE'
+        ORDER BY table_name;"""
+        )
+        # Fetch column names for specific table
+        tables = self.cur.fetchall()
+        for table in tables:
+            if "batch_inventory" in table[0].lower():
+                self.cur.execute(
+                    """SELECT id
+                    FROM batch_inventory
+                    ORDER BY id DESC
+                    LIMIT 1;"""
+                )
+
+                latest_id = self.cur.fetchone()
+                if latest_id:
+                    return latest_id[0]
+                else: return None
+        return None
+                
+                
+
     #USE ONCE - should not be adding tables this way
     def add_details_table(self):
         change_owner_query = "ALTER TABLE chemical_details OWNER TO database_dev;"
@@ -104,5 +131,4 @@ if __name__ == "__main__":
     db = Database()
     db.fetch_column_names("general_product")
     #db.fetch_table_names()
-    
     

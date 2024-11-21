@@ -3,9 +3,21 @@ import tkinter as tk
 from tkinter import Tk, filedialog, messagebox, ttk
 
 import customtkinter
-from PIL import Image, ImageTk
+from views.CTkXYFrame import *
+from PIL import Image, ImageGrab, ImageTk
 
 from config import AppConfig
+from reportlab.lib.pagesizes import A4, landscape
+
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+
+from barcode import Code128
+import qrcode
+from barcode.writer import ImageWriter
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.pdfgen import canvas
 
 # from ttkbootstrap import Style
 
@@ -49,6 +61,7 @@ class MyApp(customtkinter.CTk):
 
         self.item_type_frames = {}
         self.tab_buttons = []
+        self.preview_key_details = {}
 
         # Make window rows and columns expandable
         self.grid_rowconfigure(0, weight=0)
@@ -124,9 +137,9 @@ class MyApp(customtkinter.CTk):
         self.submit_button.grid(row=0, column=tab_column_index+1, padx=10, pady=10)
         
         # Create initial window
-        self.geometry("1200x768")
-        self.window_frame = customtkinter.CTkScrollableFrame(
-            self, fg_color="transparent"
+        self.geometry("1400x840")
+        self.window_frame = CTkXYFrame(
+            self
         )
         self.window_frame.grid(
             row=1, column=0, sticky="nsew"
@@ -242,6 +255,12 @@ class MyApp(customtkinter.CTk):
 
                 # Create the entry for the column
                 entry = customtkinter.CTkEntry(self.area_1,textvariable=sv)
+
+                #Insert default SDS
+                if "qr" in formatted_table_columns[j].lower():
+                    default_sds = "https://drive.google.com/file/d/1HfsqJG-goraXZHW8OwokIUNG_nVDM_Uz/view"
+                    entry.insert(0,default_sds)
+                    self.controller.set_qr_code_entry(default_sds)
                 entry.grid(row=row, column=col+1, padx=10, pady=5, sticky="w")
                 
                 #print(formatted_table_columns[j],f"Entry Placed Row: {row} | Col: {col+1}")
@@ -457,21 +476,112 @@ class MyApp(customtkinter.CTk):
         entry_name = args[0]
         str_var = self.entry_strings[args[1]]
         
-        
         #self.area_1_entries[entry_name] = str_var.get()
         self.controller.set_data_entries(entry_name,str_var.get())
-        
+
+        if "qr" in entry_name.lower():
+            self.controller.set_qr_code_entry(str_var.get())
         # Do something with the updated value (for now, just print it)
         #print(f"Entry {args[0]} updated: {str_var.get()}")
-        print(self.controller.get_data_entries())
+
+        #Set preview text labels
+        for key in self.preview_key_details.keys():
+            for entry in self.controller.get_data_entries().keys():
+                #print(f"Is {key.lower()} equal to {entry.lower()}?")
+                if key.lower().replace("_"," ") in entry.lower():
+                    new_key = key.replace("_"," ")
+                    if "product" in new_key and self.controller.get_tab_info()[0] != "general_inventory":
+                        new_key = "chemical name"
+                    self.preview_key_details[key].configure(
+                        text=str(f"{new_key.title()}: {self.controller.get_data_entries()[entry]}")
+                    )
+                if entry.lower() in key.lower().replace("_", " "):
+                    new_key = entry.lower().replace("_"," ")
+                    if "product" in new_key and self.controller.get_tab_info()[0] != "general_inventory":
+                        new_key = "chemical name"
+                    self.preview_key_details[key].configure(
+                        text=str(f"{new_key.title()}: {self.controller.get_data_entries()[entry]}")
+                    )
+
 
     #Not quite there yet
     def on_submit(self):
-        print("Print to PDF")
         for entry_field in self.entry_vars.keys():
             #print(f"{entry_field}: {self.entry_vars[entry_field].get()}")
             entry = self.entry_vars[entry_field].get()
+
+        self.controller.on_submission2()
+
+        #Create new barcode
+        self.generate_barcode(self.controller.get_new_barcode())
+        self.barcode_photo_prev.configure(image=self.controller.get_barcode_image())
+        self.barcode_label_prev.configure(image=self.barcode_photo_prev)
+
+        #Create new qr_code
+        self.generate_qr_code(self.controller.get_qr_code_entry())
+        print(self.controller.get_qr_code_image())
+        self.qr_code_preview_photo.configure(image=self.controller.get_qr_code_image())
+        self.qr_code_label.configure(image=self.qr_code_preview_photo)
+
+        self.capture_widget_as_image(self.preview_label_frame, "frame_capture.png")
+        self.create_pdf("frame_capture.png", "label_output.pdf")
+        
+        
+        # print("PDF created successfully!")
     
+    def generate_barcode(self,input_string):
+        try:
+            file_name = "barcode"
+            my_code = Code128(input_string, writer=ImageWriter())
+            my_code.save(file_name)  # Save the barcode as "barcode.png"
+            self.controller.set_barcode_image(f"{file_name}.png")
+            return f"{file_name}.png"  # Return the file path for later use
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+            return None
+    
+    def generate_qr_code(self,input_string):
+        try:
+            qr = qrcode.QRCode(version=1, box_size=10, border=5)
+            qr.add_data(input_string)
+            qr.make(fit=True)
+
+            img = qr.make_image(fill_color="black", back_color="white")
+            file_name = "qr_code"
+            img.save(f"{file_name}.png")
+            self.controller.set_qr_code_image(f"{file_name}.png")
+            return f"{file_name}.png"  # Return the file path for later use
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+            return None
+    
+    def capture_widget_as_image(self,widget, filename="widget_capture.png"):
+        # Get the widget's bounding box
+        x = widget.winfo_rootx()
+        y = widget.winfo_rooty()
+        width = widget.winfo_width()
+        height = widget.winfo_height()
+
+        # Use ImageGrab to capture the region of the widget on the screen
+        img = ImageGrab.grab(bbox=(x, y, x + width, y + height))
+        img.save(filename)
+
+    def create_pdf(self,image_path, pdf_filename="output.pdf"):
+        page_width, page_height = landscape(A4)  # A4 landscape size (842.0 x 595.276)
+
+        c = canvas.Canvas(pdf_filename, pagesize=(page_width, page_height))
+        img = Image.open(image_path)
+        img_width, img_height = img.size
+
+        scale_factor = min(page_width / img_width, page_height / img_height)
+
+        new_width = img_width * scale_factor
+        new_height = img_height * scale_factor
+        x_offset = (page_width - new_width) / 2
+        y_offset = (page_height - new_height) / 2
+        c.drawImage(image_path, x_offset, y_offset, width=new_width, height=new_height)
+        c.save()
+
     #Delete later
     def update_printbox(self):
         pass
@@ -481,6 +591,8 @@ class MyApp(customtkinter.CTk):
         # Clear the current frame contents
         for widget in self.preview_label_frame.winfo_children():
             widget.destroy()
+
+        page_size = 0
 
         if selection == "Landscape":
             self.preview_label_frame.configure(
@@ -495,11 +607,17 @@ class MyApp(customtkinter.CTk):
             self.preview_label_frame.grid(
                 row=2, column=0, sticky="nsew", padx=10, pady=10
             )
+            
+            page_size = landscape(A4)
+            self.controller.set_page_size(page_size)
         elif selection == "Portrait":
             self.text_box.configure(width=200)
             self.preview_label_frame.configure(width=200, height=400)  # Set portrait dimensions
             label = customtkinter.CTkLabel(self.preview_label_frame, text="Portrait Mode", font=("Arial", 16))
             self.preview_label_frame.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
+
+            page_size = A4
+            self.controller.set_page_size(page_size)
         self.preview_label_frame.grid_propagate(False)
         self.create_preview_label(self.orientation_option_menu.get(),tab=self.controller.get_tab_info()[0])
 
@@ -528,7 +646,7 @@ class MyApp(customtkinter.CTk):
 
             #Barcode Preview Image
             self.barcode_image_prev = Image.open("barcode.png")
-            self.barcode_photo_prev = customtkinter.CTkImage(dark_image=self.barcode_image_prev, size=(80,80))
+            self.barcode_photo_prev = customtkinter.CTkImage(dark_image=self.barcode_image_prev, size=(60,60))
             self.barcode_label_prev = customtkinter.CTkLabel(
                 self.preview_label_frame,
                 image=self.barcode_photo_prev,
@@ -552,7 +670,14 @@ class MyApp(customtkinter.CTk):
             self.qr_code_label.grid(row=0, column=2,padx=5, sticky="e")
 
             #Key Details
-            max_rows_per_column = 3
+            #If labels exist already, delete them
+
+            if self.preview_key_details.items():
+                for widget in self.preview_key_details:
+                    self.preview_key_details[widget].destroy()
+                self.preview_key_details = {}
+            
+            max_rows_per_column = 4
             row = 1 
             for table in self.table_types:
                 if str(tab).replace("_"," ") == table.lower():
@@ -565,8 +690,7 @@ class MyApp(customtkinter.CTk):
                         # table_label_text = self.label_tables(key, i)
                         formatted_table_columns = self.format_names(column_list)
 
-                        if key == "chemical_details":
-                            print(formatted_table_columns)
+                        
                         #print(formatted_table_columns)
                         for j, column in enumerate(column_list):
                             # print(j," ",column)
@@ -580,15 +704,32 @@ class MyApp(customtkinter.CTk):
                                 words.remove("fk")
                                 formatted_table_columns[j] = words[0].title()
 
+                            if key == "chemical_inventory":
+                                selected_data = ['date', 'volume']
+                                if column.lower() not in [x.lower() for x in selected_data]:
+                                    continue
+                                
+                                
+                            if key == "chemical_details":
+                                selected_data = ['chemical_name', 'volume', 'concentration']
+                                if column.lower() not in [x.lower() for x in selected_data]:
+                                    continue
+                            
+                            if key == "general_product" and self.controller.get_tab_info()[0] != "general_inventory":
+                                if "product" in column.lower():
+                                    formatted_table_columns[j] = "Chemical Name"
+                            
                             # Create the label for the row
                             label = customtkinter.CTkLabel(
                                 self.preview_label_frame, 
                                 text=formatted_table_columns[j] + ": ", 
                                 text_color="black",
                                 anchor="w",
+                                wraplength=150,
                             )
-                            label.grid(row=row, column=0, padx=10, sticky="ew")
-                        
+                            label.grid(row=row, column=0, padx=10, sticky="w")
+                            self.preview_key_details[column.lower()] = label
+
                             row += 1
                             if row >= max_rows_per_column:
                                 break
@@ -617,29 +758,8 @@ class MyApp(customtkinter.CTk):
             #     self.new_label_below2.grid(row=2, column=0, padx=10, sticky="w")
             self.preview_label_frame.grid_rowconfigure(1, weight=0)
 
-            #Hazards/Precautions
-            self.hazards_preview_textbox = customtkinter.CTkTextbox(
-                self.preview_label_frame, 
-                height=150,
-                fg_color="transparent",
-                text_color="black",
-            )
-            self.hazards_preview_textbox.grid(row=4, column=0, columnspan=3, padx=2,sticky="ew")
-
-            if hazards or self.controller.get_tab_info()[0] != "general_inventory":
-                self.hazards_preview_textbox.insert(tk.END,self.stored_preview_text)
-            else:
-                self.hazards_preview_textbox.delete("1.0", tk.END)
             self.preview_label_frame.grid_columnconfigure(2, weight=1)  #Empty
-
             #Diamonds
-            # diamonds = self.controller.get_diamond_vars()
-            # if diamonds is not None:
-            #     for var, label, *rest in diamonds:
-            #         if var.get():
-            #             #print(var.get())
-            
-
             self.diamonds_preview_frame = customtkinter.CTkFrame(
                 self.preview_label_frame, 
                 width=120,
@@ -651,6 +771,26 @@ class MyApp(customtkinter.CTk):
 
             if self.controller.get_tab_info()[0] != "general_inventory":
                 self.add_hazard_symbols(self.stored_diamonds)
+
+
+            #Hazards/Precautions
+            self.hazards_preview_textbox = customtkinter.CTkTextbox(
+                self.preview_label_frame, 
+                height=120,
+                width=275,
+                fg_color="transparent",
+                text_color="black",
+                wrap="word"
+            )
+            self.hazards_preview_textbox.grid(row=4, column=0, columnspan=1, padx=2,sticky="ew")
+
+            if hazards or self.controller.get_tab_info()[0] != "general_inventory":
+                self.hazards_preview_textbox.insert(tk.END,self.stored_preview_text)
+            else:
+                self.hazards_preview_textbox.delete("1.0", tk.END)
+            
+
+
 
 
             
@@ -676,10 +816,10 @@ class MyApp(customtkinter.CTk):
         if not symbols: return
 
         self.remove_all_children(self.diamonds_preview_frame)
-        min_width = 55  # Set a minimum width for the image
+        min_width = 35  # Set a minimum width for the image
         num_hazard_labels = len(symbols)
-        label_width = max(int(175 * (1/num_hazard_labels)) - 5,min_width)
-        label_height = max(int(175 * (1/num_hazard_labels)) - 5,min_width)
+        label_width = max(int(self.diamonds_preview_frame.winfo_height() * (1/num_hazard_labels)) - 5,min_width)
+        label_height = max(int(self.diamonds_preview_frame.winfo_height() * (1/num_hazard_labels)) - 5,min_width)
         
         row, col = 0, 0
         max_rows = 3
@@ -721,6 +861,8 @@ class MyApp(customtkinter.CTk):
         self.stored_diamonds = symbols
     
     def switch_preview_box(self):
+        #Clear entries from current tab
+        self.controller.clear_data_entries()
         self.create_preview_label(self.orientation_option_menu.get(),self.controller.get_tab_info()[0],hazards=False)
 
     def remove_all_children(self,frame):
