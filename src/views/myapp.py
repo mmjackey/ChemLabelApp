@@ -514,13 +514,13 @@ class MyApp(customtkinter.CTk):
 
         #Create new barcode
         self.generate_barcode(self.controller.get_new_barcode())
-        self.barcode_photo_prev.configure(image=self.controller.get_barcode_image())
+        self.barcode_photo_prev.configure(dark_image=Image.open(self.controller.get_barcode_image()))
         self.barcode_label_prev.configure(image=self.barcode_photo_prev)
 
         #Create new qr_code
         self.generate_qr_code(self.controller.get_qr_code_entry())
         print(self.controller.get_qr_code_image())
-        self.qr_code_preview_photo.configure(image=self.controller.get_qr_code_image())
+        self.qr_code_preview_photo.configure(dark_image=Image.open(self.controller.get_qr_code_image()))
         self.qr_code_label.configure(image=self.qr_code_preview_photo)
 
         self.capture_widget_as_image(self.preview_label_frame, "frame_capture.png")
@@ -564,6 +564,9 @@ class MyApp(customtkinter.CTk):
 
         # Use ImageGrab to capture the region of the widget on the screen
         img = ImageGrab.grab(bbox=(x, y, x + width, y + height))
+
+        img = img.convert("RGB")
+
         img.save(filename)
 
     def create_pdf(self,image_path, pdf_filename="output.pdf"):
@@ -788,6 +791,16 @@ class MyApp(customtkinter.CTk):
                 self.hazards_preview_textbox.insert(tk.END,self.stored_preview_text)
             else:
                 self.hazards_preview_textbox.delete("1.0", tk.END)
+            
+            self.address_label = customtkinter.CTkLabel(
+                self.preview_label_frame, 
+                text="11351 Decimal Drive Louisville, KY 40299", 
+                text_color="black",
+                anchor="w",
+                wraplength=150,
+                fg_color="transparent"
+            )
+            self.address_label.grid(row=5, column=0, columnspan=1, padx=5,pady=(0,5),sticky="ew")
             
 
 
