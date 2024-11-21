@@ -16,6 +16,7 @@ class Database:
                 "quality_control",
                 "shipping",
             ],
+            "Chemical Details": ["chemical_details"],
         }
 
         self.conn = psycopg2.connect(
@@ -51,8 +52,57 @@ class Database:
             column_names_dict[table] = vals
 
         return column_names_dict
+    
+    #Testing
+    def fetch_table_names(self):
+        self.cur.execute(
+        """SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+            AND table_type = 'BASE TABLE'
+        ORDER BY table_name;"""
+        )
+        # Fetch column names for specific table
+        tables = self.cur.fetchall()
+        for table in tables:
+            print(table[0].title())
+            if "chemical_details" in table[0].lower():
+                self.cur.execute(
+                f"""SELECT column_name, data_type
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                AND table_name   = '{table[0]}'
+                ORDER BY ordinal_position;"""
+                )
+                vals = self.cur.fetchall()
+                for column, data_type in vals:
+                    print(f"  - Column: {column}, Type: {data_type}")
+    
+    #USE ONCE - should not be adding tables this way
+    def add_details_table(self):
+        change_owner_query = "ALTER TABLE chemical_details OWNER TO database_dev;"
+        self.cur.execute(change_owner_query)
+        self.conn.commit()
+        print("Sucessfully changed owner to database_dev")
+    #     create_table_query = """
+    #     CREATE TABLE chemical_details (
+    #         id VARCHAR(12) PRIMARY KEY,  -- Changed to character varying (up to 12 characters)
+    #         chemical_name VARCHAR(255),  -- Variable-length string for chemical name
+    #         volume REAL,  -- Changed to REAL (floating-point type)
+    #         concentration REAL,  -- Changed to REAL (floating-point type)
+    #         date_created TEXT,  -- Changed to TEXT type (to store as a string)
+    #         order_url VARCHAR(255),  -- Variable-length string for order URL (max 255 characters)
+    #         image_url VARCHAR(255)   -- Variable-length string for image URL (max 255 characters)
+    #     );
+    #     """
+    #     self.cur.execute(create_table_query)
+    #     self.conn.commit()
+        
 
 
 if __name__ == "__main__":
     db = Database()
     db.fetch_column_names("general_product")
+    #db.fetch_table_names()
+    
+    

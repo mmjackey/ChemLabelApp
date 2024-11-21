@@ -1,3 +1,4 @@
+import math
 import tkinter as tk
 from tkinter import Tk, filedialog, messagebox, ttk
 
@@ -21,15 +22,33 @@ class MyApp(customtkinter.CTk):
         self.controller = controller
         self.controller.set_view(self)
 
+        #Load table information
         item_type_tables = self.controller.get_item_type_tables()
         self.table_types = item_type_tables
 
+        #Get chemical inventory table
+        self.chem_inventory_keys = [key for key in self.table_types if "chemical inventory" in key.lower()]
+        
+        #Get general inventory table
+        self.gen_inventory_keys = [key for key in self.table_types if "general" in key.lower()]
+
+        #Get batch process table
+        self.product_keys = [key for key in self.table_types if "product" in key.lower()]
+
+        #Get chem details table
+        self.chem_details = [key for key in self.table_types if "details" in key.lower()]
+
+        #See if table exists
+        #print(self.product_keys)
+
+        
         # Load warning dictionaries
         hazard_warnings = self.controller.get_hazard_classes_dict()
         precaution_warnings = self.controller.get_precaution_classes_dict()
         hazard_diamonds = self.controller.get_hazard_diamonds_dict()
 
         self.item_type_frames = {}
+        self.tab_buttons = []
 
         # Make window rows and columns expandable
         self.grid_rowconfigure(0, weight=0)
@@ -53,24 +72,46 @@ class MyApp(customtkinter.CTk):
         self.logo_label = customtkinter.CTkLabel(self.topbar_frame, image=self.logo_photo, text="")  # Empty text for the image
         self.logo_label.grid(row=0, column=0, padx=10, pady=10)
 
-        # Change key items (area 1)
-        self.topbar_button_1 = customtkinter.CTkButton(
-            self.topbar_frame,
-            text="Chemical Inventory",
-            command=lambda: self.sidebar_button_event("Chemical Inventory"),
-            fg_color="transparent",
-            border_width=0,
-        )
-        self.topbar_button_1.grid(row=0, column=2, padx=10, pady=10)
+        tab_column_index = 1
+        for i, name in enumerate(self.table_types):
+            if "product" in name.lower():
+                continue
+            topbar_button = customtkinter.CTkButton(
+                self.topbar_frame,
+                text="Chemical Details" if "details" in name.lower() else name,
+                command=lambda name=name: self.sidebar_button_event(name),
+                fg_color="transparent",
+                border_width=0,
+            )
+            topbar_button.grid(row=0, column=1+tab_column_index, padx=10, pady=10)
+            self.tab_buttons.append(topbar_button)
+            tab_column_index += 1
+        # self.topbar_button_1 = customtkinter.CTkButton(
+        #     self.topbar_frame,
+        #     text="Chemical Details",
+        #     command=lambda: self.sidebar_button_event("Chemical Details"),
+        #     fg_color="transparent",
+        #     border_width=0,
+        # )
+        # self.topbar_button_1.grid(row=0, column=2, padx=10, pady=10)
 
-        self.topbar_button_2 = customtkinter.CTkButton(
-            self.topbar_frame,
-            text="General Inventory",
-            command=lambda: self.sidebar_button_event("General Inventory"),
-            fg_color="transparent",
-            border_width=0,
-        )
-        self.topbar_button_2.grid(row=0, column=3, padx=10, pady=10)
+        # self.topbar_button_2 = customtkinter.CTkButton(
+        #     self.topbar_frame,
+        #     text="Chemical Inventory",
+        #     command=lambda: self.sidebar_button_event("Chemical Inventory"),
+        #     fg_color="transparent",
+        #     border_width=0,
+        # )
+        # self.topbar_button_2.grid(row=0, column=3, padx=10, pady=10)
+
+        # self.topbar_button_3 = customtkinter.CTkButton(
+        #     self.topbar_frame,
+        #     text="General Inventory",
+        #     command=lambda: self.sidebar_button_event("General Inventory"),
+        #     fg_color="transparent",
+        #     border_width=0,
+        # )
+        # self.topbar_button_3.grid(row=0, column=4, padx=10, pady=10)
 
         # Sumbit to PDF (Not functional)
         self.submit_button = customtkinter.CTkButton(
@@ -80,8 +121,8 @@ class MyApp(customtkinter.CTk):
             fg_color="transparent",
             border_width=0,
         )
-        self.submit_button.grid(row=0, column=4, padx=10, pady=10)
-
+        self.submit_button.grid(row=0, column=tab_column_index+1, padx=10, pady=10)
+        
         # Create initial window
         self.geometry("1200x768")
         self.window_frame = customtkinter.CTkScrollableFrame(
@@ -104,7 +145,7 @@ class MyApp(customtkinter.CTk):
         self.create_area_5()
 
         # Key Chemical Details
-        self.create_area_1("Chemical Inventory")
+        self.create_area_1(self.chem_inventory_keys)
 
         # Contains hazards and precautions
         self.create_area_2(
@@ -115,17 +156,20 @@ class MyApp(customtkinter.CTk):
         self.create_area_3(self.controller, hazard_diamonds)
 
         self.stored_preview_text = ""
+        self.stored_diamonds = []
         # Contains Preview box and orientation selection
         self.create_area_4()
 
     # First area - Fill in key chemical/general inventory details
-    def create_area_1(self, table_name):
+    def create_area_1(self, table):
         table_columns_dict = self.controller.get_database_column_names(
-            self.table_types[table_name]
+            self.table_types[''.join(table)]
         )
+        #print(table_columns_dict)
 
+        #Current tab is accessible from controller class
         if table_columns_dict:
-            self.controller.set_tab(table_name)
+            self.controller.set_tab(''.join(table))
             
         #print(self.controller.get_tab_info())
 
@@ -140,6 +184,7 @@ class MyApp(customtkinter.CTk):
         self.area_1.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
 
         # Make columns expandable
+        
         self.area_1.grid_columnconfigure(0, weight=1)  # Label
         self.area_1.grid_columnconfigure(1, weight=1)  # Entry
         self.area_1.grid_columnconfigure(2, weight=1)  # Empty
@@ -149,7 +194,7 @@ class MyApp(customtkinter.CTk):
 
         self.area_1_header = customtkinter.CTkLabel(
             self.area_1,
-            text=table_name,
+            text=''.join(table),
             font=customtkinter.CTkFont(size=18, weight="bold"),
         )
         self.area_1_header.grid(row=0, column=0, padx=10, pady=10, sticky="w")
@@ -162,7 +207,7 @@ class MyApp(customtkinter.CTk):
         for i, (key, column_list) in enumerate(table_columns_dict.items()):
             # table_label_text = self.label_tables(key, i)
             formatted_table_columns = self.format_names(column_list)
-            print(formatted_table_columns)
+            #print(formatted_table_columns)
             for j, column in enumerate(column_list):
                 # print(j," ",column)
                 if "id" in column.lower() or "hazard" in column.lower():
@@ -184,7 +229,7 @@ class MyApp(customtkinter.CTk):
                 label = customtkinter.CTkLabel(
                     self.area_1, text=formatted_table_columns[j]
                 )
-                label.grid(row=row, column=col, padx=10, pady=5)
+                label.grid(row=row, column=col, padx=10, pady=5, sticky="ew")
                 # print(formatted_table_columns[j],f"Label Placed Row: {row} | Col: {col}")
                 if row == max_rows_per_column - 1:
                     label.grid(row=row, column=col, padx=20, pady=5)
@@ -197,7 +242,7 @@ class MyApp(customtkinter.CTk):
 
                 # Create the entry for the column
                 entry = customtkinter.CTkEntry(self.area_1,textvariable=sv)
-                entry.grid(row=row, column=col+1, padx=10, pady=5)
+                entry.grid(row=row, column=col+1, padx=10, pady=5, sticky="w")
                 
                 #print(formatted_table_columns[j],f"Entry Placed Row: {row} | Col: {col+1}")
                 if row == max_rows_per_column - 1:
@@ -333,7 +378,7 @@ class MyApp(customtkinter.CTk):
         # Set initial landscape preview
         self.update_frame(self.orientation_option_menu.get())
 
-        self.create_preview_label(self.orientation_option_menu.get())
+        #(self.orientation_option_menu.get())
     
     #Fifth area - Show Selected Warning Variables
     def create_area_5(self):
@@ -382,22 +427,29 @@ class MyApp(customtkinter.CTk):
 
     # Switch between Chemical/General Inventory
     def sidebar_button_event(self, button_name):
-
         #Refresh areas - Keep preview visible
-        if button_name == "Chemical Inventory":
+        if button_name.lower() == ''.join(self.chem_inventory_keys).lower():
             self.area_2.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
             self.area_3.grid(row=3, column=0, sticky="nsew", padx=10, pady=10)
             self.area_5.grid(
             row=2, column=1, columnspan=2, sticky="nsew", padx=10, pady=10
             )
-        if button_name == "General Inventory":
+            self.create_area_1(self.chem_inventory_keys)
+        if button_name.lower() == ''.join(self.gen_inventory_keys).lower():
             self.area_2.grid_forget()
             self.area_3.grid_forget()
             self.area_5.grid_forget()
-        self.create_area_1(button_name)
+            self.create_area_1(self.gen_inventory_keys)
+        if button_name.lower() == ''.join(self.chem_details).lower():
+            self.area_2.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
+            self.area_3.grid(row=3, column=0, sticky="nsew", padx=10, pady=10)
+            self.area_5.grid(
+            row=2, column=1, columnspan=2, sticky="nsew", padx=10, pady=10
+            )
+            self.create_area_1(self.chem_details)
 
         #Refresh preview label
-        self.clear_preview_box()
+        self.switch_preview_box()
     
     def update_key_details(self, *args):
         
@@ -449,9 +501,9 @@ class MyApp(customtkinter.CTk):
             label = customtkinter.CTkLabel(self.preview_label_frame, text="Portrait Mode", font=("Arial", 16))
             self.preview_label_frame.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
         self.preview_label_frame.grid_propagate(False)
-        self.create_preview_label(self.orientation_option_menu.get())
+        self.create_preview_label(self.orientation_option_menu.get(),tab=self.controller.get_tab_info()[0])
 
-    def create_preview_label(self, selection,hazards=True):
+    def create_preview_label(self, selection, tab=None, hazards=True):
         if selection == "Landscape":
 
             self.preview_label_frame.grid_columnconfigure(0, weight=1)
@@ -466,7 +518,7 @@ class MyApp(customtkinter.CTk):
             self.preview_label_frame.grid_columnconfigure(2, weight=1)
             self.preview_label_frame.grid_columnconfigure(3, weight=0)
 
-            self.logo_label_preview = customtkinter.CTkImage(dark_image=self.logo_image2, size=(140,40))
+            self.logo_label_preview = customtkinter.CTkImage(dark_image=self.logo_image2, size=(160,40))
             self.logo_label = customtkinter.CTkLabel(
                 self.preview_label_frame, 
                 image=self.logo_label_preview, 
@@ -500,46 +552,180 @@ class MyApp(customtkinter.CTk):
             self.qr_code_label.grid(row=0, column=2,padx=5, sticky="e")
 
             #Key Details
-            self.new_label_below = customtkinter.CTkLabel(
-                self.preview_label_frame, 
-                text="Concentration:",  # Multiline text
-                text_color="black",
-                anchor="w" 
-            )
-            self.new_label_below.grid(row=1, column=0, padx=10, sticky="w")
+            max_rows_per_column = 3
+            row = 1 
+            for table in self.table_types:
+                if str(tab).replace("_"," ") == table.lower():
+                    table_columns_dict = self.controller.get_database_column_names(
+                        self.table_types[''.join(table)]
+                    )
+                    for i, (key, column_list) in enumerate(table_columns_dict.items()):
+                        
+                        
+                        # table_label_text = self.label_tables(key, i)
+                        formatted_table_columns = self.format_names(column_list)
 
-            self.new_label_below2 = customtkinter.CTkLabel(
-                self.preview_label_frame, 
-                text="Date Created:",  # Multiline text
-                text_color="black",
-                anchor="w" 
-            )
-            self.new_label_below2.grid(row=2, column=0, padx=10, sticky="w")
+                        if key == "chemical_details":
+                            print(formatted_table_columns)
+                        #print(formatted_table_columns)
+                        for j, column in enumerate(column_list):
+                            # print(j," ",column)
+                            if "id" in column.lower() or "hazard" in column.lower():
+                                continue
+                            elif "quantity" in column.lower():
+                                words = column.lower().split("_")
+                                formatted_table_columns[j] = words[0].title()
+                            elif ("fk" in column.lower()):  # Change fk_location_general_inventory to 'Location'
+                                words = column.lower().split("_")
+                                words.remove("fk")
+                                formatted_table_columns[j] = words[0].title()
+
+                            # Create the label for the row
+                            label = customtkinter.CTkLabel(
+                                self.preview_label_frame, 
+                                text=formatted_table_columns[j] + ": ", 
+                                text_color="black",
+                                anchor="w",
+                            )
+                            label.grid(row=row, column=0, padx=10, sticky="ew")
+                        
+                            row += 1
+                            if row >= max_rows_per_column:
+                                break
+            #     self.new_label_below = customtkinter.CTkLabel(
+            #     self.preview_label_frame, 
+            #     text="Chemical Name:",  # Multiline text
+            #     text_color="black",
+            #     anchor="w" 
+            #     )
+            #     self.new_label_below.grid(row=1, column=0, padx=10, sticky="w")
+            # else:
+            #     self.new_label_below = customtkinter.CTkLabel(
+            #         self.preview_label_frame, 
+            #         text="Concentration:",  # Multiline text
+            #         text_color="black",
+            #         anchor="w" 
+            #     )
+            #     self.new_label_below.grid(row=1, column=0, padx=10, sticky="w")
+
+            #     self.new_label_below2 = customtkinter.CTkLabel(
+            #         self.preview_label_frame, 
+            #         text="Date Created:",  # Multiline text
+            #         text_color="black",
+            #         anchor="w" 
+            #     )
+            #     self.new_label_below2.grid(row=2, column=0, padx=10, sticky="w")
             self.preview_label_frame.grid_rowconfigure(1, weight=0)
 
+            #Hazards/Precautions
             self.hazards_preview_textbox = customtkinter.CTkTextbox(
                 self.preview_label_frame, 
                 height=150,
                 fg_color="transparent",
                 text_color="black",
             )
-            self.hazards_preview_textbox.grid(row=3, column=0, columnspan=3, padx=2,sticky="ew")
+            self.hazards_preview_textbox.grid(row=4, column=0, columnspan=3, padx=2,sticky="ew")
 
-            if hazards:
+            if hazards or self.controller.get_tab_info()[0] != "general_inventory":
                 self.hazards_preview_textbox.insert(tk.END,self.stored_preview_text)
             else:
                 self.hazards_preview_textbox.delete("1.0", tk.END)
             self.preview_label_frame.grid_columnconfigure(2, weight=1)  #Empty
 
+            #Diamonds
+            # diamonds = self.controller.get_diamond_vars()
+            # if diamonds is not None:
+            #     for var, label, *rest in diamonds:
+            #         if var.get():
+            #             #print(var.get())
+            
+
+            self.diamonds_preview_frame = customtkinter.CTkFrame(
+                self.preview_label_frame, 
+                width=120,
+                height=120,
+                fg_color = "transparent"
+            )
+            self.diamonds_preview_frame.place(x=260, y=160)
+            self.diamonds_preview_frame.grid_propagate(False)
+
+            if self.controller.get_tab_info()[0] != "general_inventory":
+                self.add_hazard_symbols(self.stored_diamonds)
+
+
             
     def update_preview_box(self,args):
-        text=args
+        text=args[0]
+        hazard_symbols=args[1]
         self.hazards_preview_textbox.delete("1.0", tk.END)  # Clear the existing text
         self.hazards_preview_textbox.insert(tk.END, text)  # Insert the updated text
         self.stored_preview_text = text
+        
+
+        self.add_hazard_symbols(hazard_symbols)
+                    
     
-    def clear_preview_box(self):
-        self.create_preview_label(self.orientation_option_menu.get(),hazards=False)
+        # child_widgets = self.diamonds_preview_frame.winfo_children()
+        # for widget in child_widgets:
+        #     print(f"Widget: {widget} (Type: {widget.winfo_class()})")
+        #self.diamonds_preview_frame.bind("<Configure>", self.update_image_size)
+    
+    def add_hazard_symbols(self,symbols=[]):
+
+        #Exit function if no hazard symbols
+        if not symbols: return
+
+        self.remove_all_children(self.diamonds_preview_frame)
+        min_width = 55  # Set a minimum width for the image
+        num_hazard_labels = len(symbols)
+        label_width = max(int(175 * (1/num_hazard_labels)) - 5,min_width)
+        label_height = max(int(175 * (1/num_hazard_labels)) - 5,min_width)
+        
+        row, col = 0, 0
+        max_rows = 3
+        max_cols = 3
+
+        #Center diamond symbols
+        if num_hazard_labels > 2:
+            for r in range(max_rows):
+                self.diamonds_preview_frame.grid_rowconfigure(r, weight=1, uniform="equal")  # Allows rows to stretch equally
+            for c in range(max_cols):
+                self.diamonds_preview_frame.grid_columnconfigure(c, weight=1, uniform="equal")  # Allows columns to stretch equally
+        else:
+            for r in range(max_rows):
+                self.diamonds_preview_frame.grid_rowconfigure(r, weight=0, uniform="equal")  # Allows rows to stretch equally
+            for c in range(max_cols):
+                self.diamonds_preview_frame.grid_columnconfigure(c, weight=0, uniform="equal")  # Allows columns to stretch equally
+        diamonds_dict = self.controller.get_hazard_diamonds_dict()['Diamonds']
+        for item in diamonds_dict:
+            for i,symbol in enumerate(symbols):
+                #print(f"Does {item[0]} | equal | {symbol}?")
+                if item[0] == symbol:
+                    image = Image.open(item[1])
+                    resized_image = image.resize((label_width, label_height), Image.LANCZOS)
+                    image = ImageTk.PhotoImage(resized_image)
+                    hazard_label = customtkinter.CTkLabel(self.diamonds_preview_frame, image=image, text="")
+                    hazard_label.grid(row=row, column=col, sticky="nsew")
+
+                    col += 1
+
+                    # If the column reaches the max number of columns, reset it to 0 and move to the next row
+                    if col >= max_cols:
+                        col = 0
+                        row += 1
+
+            # If the number of rows reaches the max, break out of the loop
+            if row >= max_rows:
+                break
+        
+        self.stored_diamonds = symbols
+    
+    def switch_preview_box(self):
+        self.create_preview_label(self.orientation_option_menu.get(),self.controller.get_tab_info()[0],hazards=False)
+
+    def remove_all_children(self,frame):
+        for widget in frame.winfo_children():
+            widget.destroy()
 
 class HazardPrecautionFrame(customtkinter.CTkFrame):
     def __init__(self, parent, controller, warning_dict, root, images=False):
@@ -568,7 +754,7 @@ class HazardPrecautionFrame(customtkinter.CTkFrame):
 
         # Exit dropdowns
         self.close_button = customtkinter.CTkButton(
-            self, text="Close", command=self.close_checkboxes
+            self, text="Close", fg_color="gray",command=self.close_checkboxes
         )
         self.close_button.grid(row=0, column=2, padx=5, pady=5, sticky="ne")
 
@@ -635,6 +821,7 @@ class HazardPrecautionFrame(customtkinter.CTkFrame):
     def update_text_box(self):
         text = ""
         selections = self.controller.get_haz_prec_diamonds()
+        
         # if self.warning_type == "Hazard":
         #     warning_vars = self.controller.get_selected_hazards()
         # elif self.warning_type == "Precaution":
@@ -648,6 +835,8 @@ class HazardPrecautionFrame(customtkinter.CTkFrame):
         #             text += f"{label}\n"
         #     self.root.text_box.delete("1.0", tk.END)  # Clear the existing text
         # self.root.text_box.insert(tk.END, text)  # Insert the updated text
+
+        #Change hazard text box
         if selections is not None:
             for var, label, *rest in selections:
                 if var.get():
@@ -655,8 +844,16 @@ class HazardPrecautionFrame(customtkinter.CTkFrame):
             self.root.text_box.delete("1.0", tk.END)  # Clear the existing text
         self.root.text_box.insert(tk.END, text)  # Insert the updated text
 
+        #Change diamonds
+        diamonds = self.controller.get_diamond_vars()
+        diamond_images = []
+        if diamonds is not None:
+            for var, label, *rest in diamonds:
+                if var.get():
+                    diamond_images.append(label)
+        
         #Finally, update preview box
-        self.root.update_preview_box(text)
+        self.root.update_preview_box([text,diamond_images])
 
 
 class WarningClassCheckboxes(customtkinter.CTkScrollableFrame):

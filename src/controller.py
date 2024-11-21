@@ -7,6 +7,7 @@ class Controller:
         self.hazard_precautions_data = HazardsPrecautionsData
         self.area_1_entries = {}
         self.cur_tab = {}
+        self.hazard_diamonds = self.hazard_precautions_data.HAZARD_DIAMONDS
 
     def get_item_type_tables(self):
         return self.database.item_type_tables
@@ -50,7 +51,7 @@ class Controller:
 
     #Get hazards, precautions, and diamonds
     def get_haz_prec_diamonds(self):
-        return self.get_selected_hazards() + self.get_selected_precautions() + self.get_diamond_vars()
+        return self.get_selected_hazards() + self.get_selected_precautions() #+ self.get_diamond_vars()
 
     #Set chemical/general inventory entries 
     def set_data_entries(self,key,value):
