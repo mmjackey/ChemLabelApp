@@ -47,8 +47,12 @@ class MyApp(customtkinter.CTk):
         #Get batch process table
         self.product_keys = [key for key in self.table_types if "product" in key.lower()]
 
+
         #Get chem details table
         self.chem_details = [key for key in self.table_types if "details" in key.lower()]
+
+
+        self.area_1_frames = []
 
         #See if table exists
         #print(self.product_keys)
@@ -79,16 +83,18 @@ class MyApp(customtkinter.CTk):
         self.topbar_frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
         #SOFAB LOGO
+
         self.logo_image = Image.open("C:/Users/Blake/Documents/ChemLabelApp/resources/images/sofab_logo.png")
-        self.logo_image2 = Image.open("resources\images\sofab_logo2.png")
+        self.logo_image2 = Image.open("resources/images/sofab_logo2.png")
+        self.logo_image3 = Image.open("resources/images/speed-school.png")
         self.logo_photo = customtkinter.CTkImage(dark_image=self.logo_image, size=(160,40))
         self.logo_label = customtkinter.CTkLabel(self.topbar_frame, image=self.logo_photo, text="")  # Empty text for the image
         self.logo_label.grid(row=0, column=0, padx=10, pady=10)
 
         tab_column_index = 1
         for i, name in enumerate(self.table_types):
-            if "product" in name.lower():
-                continue
+            # if "product" in name.lower():
+            #     continue
             topbar_button = customtkinter.CTkButton(
                 self.topbar_frame,
                 text="Chemical Details" if "details" in name.lower() else name,
@@ -158,7 +164,7 @@ class MyApp(customtkinter.CTk):
         self.create_area_5()
 
         # Key Chemical Details
-        self.create_area_1(self.chem_inventory_keys)
+        self.create_area_1(self.chem_details)
 
         # Contains hazards and precautions
         self.create_area_2(
@@ -193,8 +199,13 @@ class MyApp(customtkinter.CTk):
         #self.area_1_entries = {}
 
         #Other
+
+        for widget in self.area_1_frames:
+            widget.destroy()
         self.area_1 = customtkinter.CTkFrame(self.window_frame, corner_radius=10)
         self.area_1.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
+
+        self.area_1_frames.append(self.area_1)
 
         # Make columns expandable
         
@@ -275,7 +286,17 @@ class MyApp(customtkinter.CTk):
                 if row >= max_rows_per_column:
                     row = 1
                     col += 2 
-            
+        
+        #Address Entry
+        address_label = customtkinter.CTkLabel(
+            self.area_1, text="Address:"
+        )
+        address_label.grid(row=row, column=col, padx=10, pady=5, sticky="ew")
+
+        address_entry = customtkinter.CTkEntry(self.area_1,textvariable=sv)
+        address_entry.grid(row=row, column=col+1, padx=10, pady=5, sticky="w")
+        self.entry_vars[column] = entry
+        
         #self.add_content()
     
     #Second area - Select warning items (hazards and precautions)
@@ -391,7 +412,7 @@ class MyApp(customtkinter.CTk):
         )
 
         #Preview Label frame 
-        self.preview_label_frame = customtkinter.CTkFrame(self.area_4,fg_color="white")
+        self.preview_label_frame = customtkinter.CTkFrame(self.area_4,fg_color="#FAF9F6",corner_radius=0)
         self.preview_label_frame.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
 
         # Set initial landscape preview
@@ -466,6 +487,13 @@ class MyApp(customtkinter.CTk):
             row=2, column=1, columnspan=2, sticky="nsew", padx=10, pady=10
             )
             self.create_area_1(self.chem_details)
+        if button_name.lower() == ''.join(self.product_keys).lower():
+            self.area_2.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
+            self.area_3.grid(row=3, column=0, sticky="nsew", padx=10, pady=10)
+            self.area_5.grid(
+            row=2, column=1, columnspan=2, sticky="nsew", padx=10, pady=10
+            )
+            self.create_area_1(self.product_keys)
 
         #Refresh preview label
         self.switch_preview_box()
@@ -521,8 +549,14 @@ class MyApp(customtkinter.CTk):
         self.generate_qr_code(self.controller.get_qr_code_entry())
         print(self.controller.get_qr_code_image())
         self.qr_code_preview_photo.configure(dark_image=Image.open(self.controller.get_qr_code_image()))
-        self.qr_code_label.configure(image=self.qr_code_preview_photo)
 
+        image_width = self.qr_code_image_preview.size[0]
+        self.qr_code_label.configure(image=self.qr_code_preview_photo)
+        self.barcode_label_prev.grid(row=0, column=1, padx=0, sticky="w")
+        self.qr_code_label.grid(row=0, column=2,padx=(0,5),sticky="e")
+        #self.qr_code_label.grid(padx=(0,15))
+        messagebox.showinfo("showinfo", "Barcode & QR Code Generated")
+        
         self.capture_widget_as_image(self.preview_label_frame, "frame_capture.png")
         self.create_pdf("frame_capture.png", "label_output.pdf")
         
@@ -562,10 +596,10 @@ class MyApp(customtkinter.CTk):
         width = widget.winfo_width()
         height = widget.winfo_height()
 
-        # Use ImageGrab to capture the region of the widget on the screen
         img = ImageGrab.grab(bbox=(x, y, x + width, y + height))
 
         img = img.convert("RGB")
+        
 
         img.save(filename)
 
@@ -639,6 +673,7 @@ class MyApp(customtkinter.CTk):
             self.preview_label_frame.grid_columnconfigure(2, weight=1)
             self.preview_label_frame.grid_columnconfigure(3, weight=0)
 
+            #Logo
             self.logo_label_preview = customtkinter.CTkImage(dark_image=self.logo_image2, size=(160,40))
             self.logo_label = customtkinter.CTkLabel(
                 self.preview_label_frame, 
@@ -667,10 +702,10 @@ class MyApp(customtkinter.CTk):
 
             self.preview_label_frame.grid_columnconfigure(0, weight=1)  # This will make the first column take up space
             self.preview_label_frame.grid_columnconfigure(1, weight=0)
-            self.preview_label_frame.grid_columnconfigure(2, weight=0)
+            self.preview_label_frame.grid_columnconfigure(2, weight=1)
             
-            self.barcode_label_prev.grid(row=0, column=1, padx=5, pady=5, sticky="w")
-            self.qr_code_label.grid(row=0, column=2,padx=5, sticky="e")
+            self.barcode_label_prev.grid(row=0, column=1, padx=(0,15), sticky="w")
+            self.qr_code_label.grid(row=0, column=2,padx=0,sticky="e")
 
             #Key Details
             #If labels exist already, delete them
@@ -722,13 +757,19 @@ class MyApp(customtkinter.CTk):
                                 if "product" in column.lower():
                                     formatted_table_columns[j] = "Chemical Name"
                             
+                            if key == "general_inventory":
+                                selected_data = ['product_name','location']
+                                if formatted_table_columns[j].lower() not in [x.lower() for x in selected_data]:
+                                    continue
+                                #selected_data['product_name', ]
+                            
                             # Create the label for the row
                             label = customtkinter.CTkLabel(
                                 self.preview_label_frame, 
                                 text=formatted_table_columns[j] + ": ", 
                                 text_color="black",
                                 anchor="w",
-                                wraplength=150,
+                                wraplength=250,
                             )
                             label.grid(row=row, column=0, padx=10, sticky="w")
                             self.preview_key_details[column.lower()] = label
@@ -769,7 +810,7 @@ class MyApp(customtkinter.CTk):
                 height=120,
                 fg_color = "transparent"
             )
-            self.diamonds_preview_frame.place(x=260, y=160)
+            self.diamonds_preview_frame.place(x=270, y=160)
             self.diamonds_preview_frame.grid_propagate(False)
 
             if self.controller.get_tab_info()[0] != "general_inventory":
@@ -779,7 +820,7 @@ class MyApp(customtkinter.CTk):
             #Hazards/Precautions
             self.hazards_preview_textbox = customtkinter.CTkTextbox(
                 self.preview_label_frame, 
-                height=120,
+                height=110,
                 width=275,
                 fg_color="transparent",
                 text_color="black",
@@ -797,10 +838,10 @@ class MyApp(customtkinter.CTk):
                 text="11351 Decimal Drive Louisville, KY 40299", 
                 text_color="black",
                 anchor="w",
-                wraplength=150,
+                wraplength=300,
                 fg_color="transparent"
             )
-            self.address_label.grid(row=5, column=0, columnspan=1, padx=5,pady=(0,5),sticky="ew")
+            self.address_label.grid(row=5, column=0, columnspan=1, padx=5,pady=(0,25),sticky="ew")
             
 
 

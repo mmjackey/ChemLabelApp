@@ -103,8 +103,6 @@ class Database:
                 else: return None
         return None
                 
-                
-
     #USE ONCE - should not be adding tables this way
     def add_details_table(self):
         change_owner_query = "ALTER TABLE chemical_details OWNER TO database_dev;"
