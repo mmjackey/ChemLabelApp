@@ -2,18 +2,13 @@ import os
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+import psycopg2
 import qrcode
 from barcode import Code128
 from barcode.writer import ImageWriter
-
-import qrcode
-from reportlab.pdfgen import canvas 
-from reportlab.lib import colors 
-from reportlab.lib.pagesizes import landscape, A4
-from reportlab.lib.units import inch
-import psycopg2
-from enum import Enum
-
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.pdfgen import canvas
 
 # Dark theme colors
 BACKGROUND_COLOR = "#2E2E2E"  # gray
@@ -64,16 +59,16 @@ def generate_pdf(
 
     # Paths for additional images
 
-    #Retrieve path for logo
-    #relative_path = './sofab_logo.png'
-    #logo = os.path.abspath(relative_path)
-    logo = 'sofab_logo.png'
-    #logo = os.path.normpath(absolute_path).replace('\\', '/')  # Update with the correct path
-    #logo = absolute_path).replace('\\', '/')  # Update with the correct path
-    flame = 'flame.png'      # Update with the correct path
-    
-    # Creating a pdf object 
-    pdf = canvas.Canvas(fileName) 
+    # Retrieve path for logo
+    # relative_path = './sofab_logo.png'
+    # logo = os.path.abspath(relative_path)
+    logo = "sofab_logo.png"
+    # logo = os.path.normpath(absolute_path).replace('\\', '/')  # Update with the correct path
+    # logo = absolute_path).replace('\\', '/')  # Update with the correct path
+    flame = "flame.png"  # Update with the correct path
+
+    # Creating a pdf object
+    pdf = canvas.Canvas(fileName)
 
     pdf.setPageSize(page_size)
     pdf.setTitle(documentTitle)
@@ -90,25 +85,25 @@ def generate_pdf(
 
     # Draw chemical info
 
-    pdf.setFont("Helvetica-Bold", 25) 
-    pdf.drawString(20, 350, 'Chemical Name:') 
-    pdf.setFont("Helvetica", 25) 
-    pdf.drawString(250, 350, batch) 
+    pdf.setFont("Helvetica-Bold", 25)
+    pdf.drawString(20, 350, "Chemical Name:")
+    pdf.setFont("Helvetica", 25)
+    pdf.drawString(250, 350, batch)
 
-    pdf.setFont("Helvetica-Bold", 25) 
-    pdf.drawString(20, 300, 'Volume:') 
-    pdf.setFont("Helvetica", 25) 
-    pdf.drawString(250, 300, volume) 
+    pdf.setFont("Helvetica-Bold", 25)
+    pdf.drawString(20, 300, "Volume:")
+    pdf.setFont("Helvetica", 25)
+    pdf.drawString(250, 300, volume)
 
-    pdf.setFont("Helvetica-Bold", 25) 
-    pdf.drawString(20, 450, 'Concentration:') 
-    pdf.setFont("Helvetica", 25) 
-    pdf.drawString(250, 450, concentration) 
+    pdf.setFont("Helvetica-Bold", 25)
+    pdf.drawString(20, 450, "Concentration:")
+    pdf.setFont("Helvetica", 25)
+    pdf.drawString(250, 450, concentration)
 
-    pdf.setFont("Helvetica-Bold", 25) 
-    pdf.drawString(20, 400, 'Date Created:') 
-    pdf.setFont("Helvetica", 25) 
-    pdf.drawString(250, 400, date) 
+    pdf.setFont("Helvetica-Bold", 25)
+    pdf.drawString(20, 400, "Date Created:")
+    pdf.setFont("Helvetica", 25)
+    pdf.drawString(250, 400, date)
 
     # Draw barcode and QR code images
     if barcode_path:
@@ -159,13 +154,21 @@ def on_submit():
     qr_code_path = generate_qr_code(qr_code_input)
 
     # Add barcode batch id to database
-    print_synthesis_rows(barcode_input.upper(),stage)
-    
+    print_synthesis_rows(barcode_input.upper(), stage)
 
-    generate_pdf(batch, date, concentration, volume, barcode_path, qr_code_path, page_size, text)
-
+    generate_pdf(
+        batch,
+        date,
+        concentration,
+        volume,
+        barcode_path,
+        qr_code_path,
+        page_size,
+        text,
+    )
 
     messagebox.showinfo("Success", "PDF generated successfully!")
+
 
 # Set up GUI interface
 def setup_interface():
@@ -233,8 +236,10 @@ def setup_interface():
     qr_code_entry = tk.Entry(chemical_frame, bg=ENTRY_COLOR, fg=TEXT_COLOR)
     qr_code_entry.grid(row=6, column=1, padx=10, pady=5)
 
-
-    qr_code_entry.insert(0, "https://drive.google.com/file/d/1HfsqJG-goraXZHW8OwokIUNG_nVDM_Uz/view")
+    qr_code_entry.insert(
+        0,
+        "https://drive.google.com/file/d/1HfsqJG-goraXZHW8OwokIUNG_nVDM_Uz/view",
+    )
     # Page size selection
     tk.Label(
         chemical_frame, text="Page Size:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR
@@ -244,14 +249,18 @@ def setup_interface():
         chemical_frame, page_size_var, "Portrait", "Portrait", "Landscape"
     )
     page_size_menu.grid(row=7, column=1, padx=10, pady=5)
-    
+
     # Add to database checkbox
     stage_frame = ttk.Frame(chemical_frame, borderwidth=0)
     stage_frame.grid(row=9, column=0, columnspan=2, padx=10, pady=5)
-    tk.Label(stage_frame, text="Stage:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR).grid(row=0, column=0, padx=5, pady=5)
+    tk.Label(
+        stage_frame, text="Stage:", bg=BACKGROUND_COLOR, fg=TEXT_COLOR
+    ).grid(row=0, column=0, padx=5, pady=5)
     stage_choice = tk.StringVar()
     options = ["Synthesis", "Washing"]
-    stage_entry = ttk.OptionMenu(stage_frame, stage_choice, options[0], *options)
+    stage_entry = ttk.OptionMenu(
+        stage_frame, stage_choice, options[0], *options
+    )
     stage_entry.grid(row=0, column=1, padx=5, pady=5)
     stage_frame.grid_forget()
 
@@ -262,7 +271,12 @@ def setup_interface():
             stage_frame.grid_forget()
 
     checkbox_var = tk.BooleanVar()
-    checkbox = tk.Checkbutton(chemical_frame, text="Add to database", variable=checkbox_var, command=checkbox_checked)
+    checkbox = tk.Checkbutton(
+        chemical_frame,
+        text="Add to database",
+        variable=checkbox_var,
+        command=checkbox_checked,
+    )
     checkbox.grid(row=8, column=0, padx=10, pady=5)
 
     # Second tab for Hazard Details
@@ -382,25 +396,25 @@ def setup_interface():
 
 #######################################################################
 def update_hazard_checkboxes(checkbox_frame):
-    global checkbox_vars  # Ensure we're using the global variable
-    # Clear existing checkboxes
+    global checkbox_vars  # ensure we're using the global variable
+    # clear existing checkboxes
     for widget in checkbox_frame.winfo_children():
         widget.destroy()
 
-    # Check if the selected hazard type is "Physical Hazards"
-    if hazard_type_var.get() == "Physical Hazards (H2)":
+    # check if the selected hazard type is "physical hazards"
+    if hazard_type_var.get() == "physical hazards (h2)":
         hazards = [
-            "H200 Unstable explosive",
-            "H201 Explosive; mass explosion hazard",
-            "H202 Explosive; severe projection hazard",
-            "H203 Explosive; fire, blast or projection hazard",
-            "H204 Fire or projection hazard",
-            "H205 May mass explode in fire",
-            "H206 Fire, blast or projection hazard; increased risk of explosion if desensitizing agent is reduced",
-            "H207 Fire or projection hazard; increased risk of explosion if desensitizing agent is reduced",
-            "H208 Fire hazard; increased risk of explosion if desensitizing agent is reduced",
-            "H220 Extremely flammable gas",
-            "H221 Flammable gas",
+            "h200 unstable explosive",
+            "h201 explosive; mass explosion hazard",
+            "h202 explosive; severe projection hazard",
+            "h203 explosive; fire, blast or projection hazard",
+            "h204 fire or projection hazard",
+            "h205 may mass explode in fire",
+            "h206 fire, blast or projection hazard; increased risk of explosion if desensitizing agent is reduced",
+            "h207 fire or projection hazard; increased risk of explosion if desensitizing agent is reduced",
+            "h208 fire hazard; increased risk of explosion if desensitizing agent is reduced",
+            "h220 extremely flammable gas",
+            "h221 flammable gas",
             "H222 Extremely flammable aerosol",
             "H223 Flammable aerosol",
             "H224 Extremely flammable liquid and vapour",
@@ -673,23 +687,24 @@ def update_precautionary_checkboxes(precaution_checkbox_frame):
     # Add functionality to update text box based on checkboxes
     update_text_box()
 
-def print_synthesis_rows(b,s):
+
+def print_synthesis_rows(b, s):
 
     conn = psycopg2.connect(
         database="inventory_management",
         user="postgres",
         host="host.docker.internal",
         password="team3#",
-        port=5432
+        port=5432,
     )
 
-    if len(b) != 12: return
+    if len(b) != 12:
+        return
 
     cur = conn.cursor()
-    #cur.execute("SELECT * FROM synthesis")
+    # cur.execute("SELECT * FROM synthesis")
     cur.execute(f"SELECT * FROM {s} WHERE batch_id = %s", (b,))
 
-    
     rows = cur.fetchall()
 
     cur.execute(f"SELECT * FROM {'batch_inventory'}")
@@ -700,66 +715,81 @@ def print_synthesis_rows(b,s):
     colnames = [desc[0] for desc in cur.description]
     row_info = []
 
-
     i = 0
     for name in colnames:
 
-        if name == "batch_id": 
+        if name == "batch_id":
             row_info.append(b)
             batch_col_index = i
-        else: row_info.append('NULL')
+        else:
+            row_info.append("NULL")
         i += 1
-    
-   #cur.execute(f"SELECT stage FROM {'batch_inventory'} ORDER BY (id) DESC LIMIT 1;")
-    #last_row = cur.fetchone()
-    #print(last_row[0])
 
-    batch_inven_row_result = [0,'synthesis',b,0]
-    batch_inven_row_result = str(batch_inven_row_result).replace('[', '').replace(']', '')
-    #print(batch_inven_row_result)
+    # cur.execute(f"SELECT stage FROM {'batch_inventory'} ORDER BY (id) DESC LIMIT 1;")
+    # last_row = cur.fetchone()
+    # print(last_row[0])
+
+    batch_inven_row_result = [0, "synthesis", b, 0]
+    batch_inven_row_result = (
+        str(batch_inven_row_result).replace("[", "").replace("]", "")
+    )
+    # print(batch_inven_row_result)
     cur.execute(f"SELECT * FROM {s} ORDER BY (batch_id) DESC LIMIT 1;")
     last_row = cur.fetchone()
     last_row = list(last_row)
     last_row[batch_col_index] = b
-    row_result = str(last_row).replace('[', '').replace(']', '')
+    row_result = str(last_row).replace("[", "").replace("]", "")
 
-    if rows: print(f"'{b}'already exists in {s} table.")
-    else: 
+    if rows:
+        print(f"'{b}'already exists in {s} table.")
+    else:
         print(f"'{b}'can be added to {s} table.")
 
-        #Add batch id to batch inventory table
-        #cur.execute(f"INSERT INTO {'batch_inventory'} ({', '.join(batch_inventory_colnames)}) VALUES ({batch_inven_row_result})")
-        cur.execute("""INSERT INTO batch_inventory (start_vol,final_vol,id) 
+        # Add batch id to batch inventory table
+        # cur.execute(f"INSERT INTO {'batch_inventory'} ({', '.join(batch_inventory_colnames)}) VALUES ({batch_inven_row_result})")
+        cur.execute(
+            """INSERT INTO batch_inventory (start_vol,final_vol,id) 
                      VALUES (%s,%s,%s);
                      """,
-                     (0, 0, b))
+            (0, 0, b),
+        )
         conn.commit()
-        cur.execute("""
+        cur.execute(
+            """
                     SELECT EXISTS (SELECT 1 FROM batch_inventory WHERE id = %s)
-                    """, (b,))
+                    """,
+            (b,),
+        )
         result = cur.fetchone()[0]
 
         if result:
             print("Batch ID added to batch_inventory")
-            #Add new row to user-specified table
+            # Add new row to user-specified table
             try:
-                cur.execute("""
+                cur.execute(
+                    """
                     INSERT INTO {} ({}) VALUES ({})
                     ON CONFLICT (batch_id) DO NOTHING
-                """.format(s.lower(), ', '.join(colnames), row_result))
+                """.format(
+                        s.lower(), ", ".join(colnames), row_result
+                    )
+                )
                 conn.commit()
-                messagebox.showinfo("Success",f"ID {b} successfully added to the {s} table")
+                messagebox.showinfo(
+                    "Success", f"ID {b} successfully added to the {s} table"
+                )
             except psycopg2.Error as e:
                 print(f"Error: {e.pgcode} - {e.pgerror}")
-            
+
         else:
             print(f"{b} not in batch_inventory")
-        
-    #print("Columns:", colnames)    
-    #print("\nRows in the synthesis table:")
-    #for row in rows: print(row)
+
+    # print("Columns:", colnames)
+    # print("\nRows in the synthesis table:")
+    # for row in rows: print(row)
     cur.close()
     conn.close()
+
 
 #######################################################################
 def update_text_box():
@@ -774,48 +804,44 @@ def update_text_box():
 # Initialize main application
 root = tk.Tk()
 
-#Custom theme
+# Custom theme
 style = ttk.Style(root)
 # Define your color scheme
 WHITE = "#ffffff"
 GRAY = "#2E2E2E"
 D_GRAY = "#4A4A4A"
 L_GRAY = "#3E3E3E"
- 
+
 style.theme_create(
     "mytheme",
-    parent = "default",
-    settings = {
+    parent="default",
+    settings={
         "TScrollbar": {
             "configure": {
                 "background": GRAY,
                 "troughcolor": WHITE,
                 "lightcolor": L_GRAY,
-                "borderwidth": 1},
+                "borderwidth": 1,
+            },
             "map": {
-                "background": [("active", GRAY),
-                               ("disabled", L_GRAY)],
-                "arrowcolor": [("active", GRAY),
-                               ("disabled", L_GRAY)]}},
-        "TFrame": {
-                "configure": {
-                    "background": GRAY}},
-        "TNotebook": {
-            "configure":
-            {
-                "background": GRAY}},
+                "background": [("active", GRAY), ("disabled", L_GRAY)],
+                "arrowcolor": [("active", GRAY), ("disabled", L_GRAY)],
+            },
+        },
+        "TFrame": {"configure": {"background": GRAY}},
+        "TNotebook": {"configure": {"background": GRAY}},
         "TNotebook.Tab": {
-            "configure":
-            {
-                "background": GRAY},
-            "map": {
-                "background": [("selected", GRAY)]}}})
- 
+            "configure": {"background": GRAY},
+            "map": {"background": [("selected", GRAY)]},
+        },
+    },
+)
+
 style.theme_use("mytheme")
 
 root.title("Chemical Hazard Generator")
 root.geometry("800x600")
-root['bg'] = BACKGROUND_COLOR
+root["bg"] = BACKGROUND_COLOR
 root.configure(bg=BACKGROUND_COLOR)
 
 setup_interface()
