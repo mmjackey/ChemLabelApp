@@ -20,6 +20,8 @@ class Controller:
 
         self.db_insertion = False
 
+        self.converted_entries = {}
+
     def get_item_type_tables(self):
         return self.database.get_inventory_table_types()
 
@@ -129,21 +131,23 @@ class Controller:
     def set_get_pdf_path(self, file_dialog_callback):
         self.pdf_generator.save_pdf_callback = file_dialog_callback
 
-    def fix_columns(self,dict,table):
+    def fix_columns(self,the_dict,table):
         table_def = table.replace("_"," ").title()
         if "batch" in table_def.lower():
             table_def ="Product Inventory (Batch Process)"
         table_columns_dict = self.get_database_column_names(
             self.get_item_type_tables()[table_def]
         )
-        user_entries = dict
+        user_entries = the_dict
+        total_entries = {}
         normalized_entries = {}
         
+        stop_early = False
         for table, db_column_list in table_columns_dict.items():
+            print("New table: ", table)
             for key, value in user_entries.items():
-                if 'product' in table_def.lower():
-                    if 'batch' not in table:
-                        break
+                if "batch" in table.lower():
+                    stop_early = True
                 # Normalize user column name (spaces to underscores, lowercase)
                 normalized_key = key.replace(" ", "_").lower()
                 
@@ -167,8 +171,13 @@ class Controller:
                             normalized_entries[db_col] = value
                             print(f"Renamed '{key}' to '{db_col}' based on partial match.")
                             break
-        
-        valid_entries = normalized_entries
+            
+            print(normalized_entries)
+            total_entries[table] = normalized_entries
+            if stop_early: break
+
+            
+        valid_entries = total_entries
         return valid_entries
         
     def set_db_insertion(self,bool):
@@ -182,10 +191,10 @@ class Controller:
             user_entries = {key: value for key, value in user_entries.items() if value != ""}
             expected = self.entry_parser.convert_value_types(user_entries,cur_table)
 
-            
             conversion = self.entry_parser.convert_to_types(user_entries,expected_types=expected)
             if isinstance(conversion, dict):
                 for name,i in conversion.items():
+                    self.converted_entries = conversion
                     #print(f"{name} : {type(i)}")
                     pass
             elif conversion:
@@ -196,6 +205,7 @@ class Controller:
             #print(self.database.check_column_data_types(user_entries, cur_table))
 
     def add_to_database(self,table,details):
+        stop_early = False
         table_def = table.replace("_"," ").title()
         if "batch" in table_def.lower():
             table_def ="Product Inventory (Batch Process)"
@@ -207,6 +217,9 @@ class Controller:
         normalized_entries = {}
         
         for table in db_columns:
+            #print(table)
+            if "batch" in table.lower():
+                stop_early = True
             for key, value in user_entries.items():
                 normalized_key = key.replace(" ", "_").lower()  # Convert spaces to underscores and make lowercase
                 
@@ -215,9 +228,11 @@ class Controller:
             
             valid_entries = normalized_entries
             if valid_entries:  # Only insert if there are valid entries
+                pass
                 self.database.insert_data_into_db(table,valid_entries)
             else:
                 print("No valid entries to insert.")
+            if stop_early: break
     
     def on_submission(self):
         item_frame_container = self.view.item_frame_container
@@ -265,6 +280,8 @@ class Controller:
         #Details from tab
         selected_details = {}
         selected_details2 = {}
+        selected_details3 = {}
+        selected_details4 = {}
         if cur_tab == "chemical_details":
             selected_data = ['chemical_name', 'volume', 'concentration','qr_code']
             for key in details1.keys():
@@ -274,7 +291,31 @@ class Controller:
                         key_index = "qr_code"
                     selected_details[key_index] = details1[key]
                 selected_details2[key_index] = details1[key]
-
+        if cur_tab == "batch_inventory":
+            selected_data = ['start_vol', 'current_volume', 'production','qr_code']
+            for key in details1.keys():
+                if key.lower().replace(" ","_") in [x.lower() for x in selected_data]:
+                    key_index = key.lower()
+                    if "qr" in key.lower():
+                        key_index = "qr_code"
+                    selected_details[key_index] = details1[key]
+                selected_details2[key_index] = details1[key]
+        if cur_tab == "general_inventory":
+            selected_data1 = ['quantity', 'location', 'production','qr_code']
+            selected_data2 = ['product_name','product_description','vendor_sku','hazard_details','model_number','vendor_name','category', 'image_url','order_url']
+            for key in details1.keys():
+                if key.lower().replace(" ","_") in [x.lower() for x in selected_data1]:
+                    key_index = key.lower()
+                    if "qr" in key.lower():
+                        key_index = "qr_code"
+                    selected_details[key_index] = details1[key]
+                selected_details2[key_index] = details1[key]
+                if key.lower().replace(" ","_") in [x.lower() for x in selected_data2]:
+                    key_index = key.lower()
+                    if "qr" in key.lower():
+                        key_index = "qr_code"
+                    selected_details3[key_index] = details1[key]
+                selected_details4[key_index] = details1[key]
 
         #Create new barcode id
         details2 = self.next_id(self.database.get_latest_barcode_id(self.get_tab_info()[0]))
@@ -286,12 +327,15 @@ class Controller:
         #Page Size
         details4 = "Landscape" #self.get_page_size()
 
+    
         selected_details["barcode_input"] = details2
         selected_details["qr_code_input"] = details3
         selected_details["page_size"] = details4
         
-        
         selected_details2 = self.fix_columns(self.get_data_entries(),cur_tab)
+
+        if self.converted_entries:
+            self.converted_entries["id"] = details2
         selected_details2["id"] = details2
 
         #Hazards and Precautions
@@ -300,18 +344,23 @@ class Controller:
             selected_precautions = self.get_selected_precautions()
 
         if self.db_insertion: 
-            expected = self.entry_parser.convert_value_types(selected_details2,cur_tab)
-            conversion = self.entry_parser.convert_to_types(selected_details2,expected_types=expected)
+            if self.converted_entries:
+                expected = self.entry_parser.convert_value_types(self.converted_entries,cur_tab)
+                conversion = self.entry_parser.convert_to_types(self.converted_entries,expected_types=expected)
+            else:
+                expected = self.entry_parser.convert_value_types(selected_details2,cur_tab)
+                conversion = self.entry_parser.convert_to_types(selected_details2,expected_types=expected)
             if isinstance(conversion, dict):
+                print(conversion) 
+                self.add_to_database(self.get_tab_info()[0],self.converted_entries)
                 for name,i in conversion.items():
                     #print(f"{name} : {type(i)}")
                     pass
             elif conversion:
-                print(conversion)
                 self.view.data_error_message(conversion)
-
                 self.db_insertion = False
-            self.add_to_database(self.get_tab_info()[0],selected_details2)
+            
+           
 
     def get_database_column_names(self, table):
         return self.database.fetch_column_names(table)
