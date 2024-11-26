@@ -51,7 +51,9 @@ class MyApp(customtkinter.CTk):
         #Get chem details table
         self.chem_details = [key for key in self.table_types if "details" in key.lower()]
 
-
+        print(self.chem_details)
+        self.default_address = "11351 Decimal Drive Louisville, KY 40299"
+    
         self.area_1_frames = []
 
         #See if table exists
@@ -83,8 +85,8 @@ class MyApp(customtkinter.CTk):
         self.topbar_frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
         #SOFAB LOGO
-
-        self.logo_image = Image.open("C:/Users/Blake/Documents/ChemLabelApp/resources/images/sofab_logo.png")
+        #Load images
+        self.logo_image = Image.open("resources\images\sofab_logo.png")
         self.logo_image2 = Image.open("resources/images/sofab_logo2.png")
         self.logo_image3 = Image.open("resources/images/speed-school.png")
         self.logo_photo = customtkinter.CTkImage(dark_image=self.logo_image, size=(160,40))
@@ -93,8 +95,8 @@ class MyApp(customtkinter.CTk):
 
         tab_column_index = 1
         for i, name in enumerate(self.table_types):
-            # if "product" in name.lower():
-            #     continue
+            if "product" in name.lower():
+                continue
             topbar_button = customtkinter.CTkButton(
                 self.topbar_frame,
                 text="Chemical Details" if "details" in name.lower() else name,
@@ -142,6 +144,8 @@ class MyApp(customtkinter.CTk):
         )
         self.submit_button.grid(row=0, column=tab_column_index+1, padx=10, pady=10)
         
+        customtkinter.set_appearance_mode("dark")
+
         # Create initial window
         self.geometry("1400x840")
         self.window_frame = CTkXYFrame(
@@ -164,6 +168,7 @@ class MyApp(customtkinter.CTk):
         self.create_area_5()
 
         # Key Chemical Details
+        self.inventory_type = ''.join(self.chem_details).lower()
         self.create_area_1(self.chem_details)
 
         # Contains hazards and precautions
@@ -181,6 +186,11 @@ class MyApp(customtkinter.CTk):
 
     # First area - Fill in key chemical/general inventory details
     def create_area_1(self, table):
+
+        #Get latest id from chosen inventory type
+        self.controller.set_id_info(self.inventory_type.replace(" ","_"),self.controller.next_id(self.controller.database.get_latest_barcode_id(self.inventory_type)))
+        self.controller.set_new_barcode(self.controller.get_id_info()[self.inventory_type.replace(" ","_")])
+
         table_columns_dict = self.controller.get_database_column_names(
             self.table_types[''.join(table)]
         )
@@ -231,7 +241,9 @@ class MyApp(customtkinter.CTk):
         for i, (key, column_list) in enumerate(table_columns_dict.items()):
             # table_label_text = self.label_tables(key, i)
             formatted_table_columns = self.format_names(column_list)
-            #print(formatted_table_columns)
+            if "Product Inventory" in table:
+                if "synthesis" not in key:
+                    continue
             for j, column in enumerate(column_list):
                 # print(j," ",column)
                 if "id" in column.lower() or "hazard" in column.lower():
@@ -293,10 +305,26 @@ class MyApp(customtkinter.CTk):
         )
         address_label.grid(row=row, column=col, padx=10, pady=5, sticky="ew")
 
-        address_entry = customtkinter.CTkEntry(self.area_1,textvariable=sv)
+        sv2 = customtkinter.StringVar()
+
+        self.entry_strings.append(sv2)
+        sv2.trace("w", lambda *args, name="address", index=entry_count: self.update_key_details(name,index))
+
+        address_entry = customtkinter.CTkEntry(self.area_1,textvariable=sv2)
         address_entry.grid(row=row, column=col+1, padx=10, pady=5, sticky="w")
         self.entry_vars[column] = entry
         
+        #ADD TO DATABASE
+        self.add_to_db_var = customtkinter.StringVar(value="off")
+        self.db_insertion_checkbox = customtkinter.CTkCheckBox(
+            self.area_1,
+            text="Add to database",  # Label for the checkbox
+            variable=self.add_to_db_var,  # Bind to the StringVar to track its state
+            onvalue="on",  # The value when the checkbox is checked
+            offvalue="off",  # The value when the checkbox is unchecked
+            command=self.checkbox_changed  # Function to call when the state changes
+        )
+        self.db_insertion_checkbox.grid(row=max_rows_per_column+1, column=0, padx=10, pady=10, sticky="sw")
         #self.add_content()
     
     #Second area - Select warning items (hazards and precautions)
@@ -468,7 +496,9 @@ class MyApp(customtkinter.CTk):
     # Switch between Chemical/General Inventory
     def sidebar_button_event(self, button_name):
         #Refresh areas - Keep preview visible
+        self.inventory_type = ""
         if button_name.lower() == ''.join(self.chem_inventory_keys).lower():
+            self.inventory_type = ''.join(self.chem_inventory_keys).lower()
             self.area_2.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
             self.area_3.grid(row=3, column=0, sticky="nsew", padx=10, pady=10)
             self.area_5.grid(
@@ -476,32 +506,45 @@ class MyApp(customtkinter.CTk):
             )
             self.create_area_1(self.chem_inventory_keys)
         if button_name.lower() == ''.join(self.gen_inventory_keys).lower():
+            self.inventory_type = ''.join(self.gen_inventory_keys).lower()
             self.area_2.grid_forget()
             self.area_3.grid_forget()
             self.area_5.grid_forget()
             self.create_area_1(self.gen_inventory_keys)
         if button_name.lower() == ''.join(self.chem_details).lower():
+            self.inventory_type = ''.join(self.chem_details).lower()
             self.area_2.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
             self.area_3.grid(row=3, column=0, sticky="nsew", padx=10, pady=10)
             self.area_5.grid(
             row=2, column=1, columnspan=2, sticky="nsew", padx=10, pady=10
             )
             self.create_area_1(self.chem_details)
-        if button_name.lower() == ''.join(self.product_keys).lower():
-            self.area_2.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
-            self.area_3.grid(row=3, column=0, sticky="nsew", padx=10, pady=10)
-            self.area_5.grid(
-            row=2, column=1, columnspan=2, sticky="nsew", padx=10, pady=10
-            )
-            self.create_area_1(self.product_keys)
-
+        # if button_name.lower() == ''.join(self.product_keys).lower():
+        #     self.inventory_type = "batch_inventory"
+        #     self.area_2.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
+        #     self.area_3.grid(row=3, column=0, sticky="nsew", padx=10, pady=10)
+        #     self.area_5.grid(
+        #     row=2, column=1, columnspan=2, sticky="nsew", padx=10, pady=10
+        #     )
+        #     self.create_area_1(self.product_keys)
+        
         #Refresh preview label
         self.switch_preview_box()
     
+    #When add to database is toggled
+    def checkbox_changed(self):
+        if self.add_to_db_var.get() == "on":
+            self.controller.set_db_insertion(True)
+        else:
+            self.controller.set_db_insertion(False)
+
+
     def update_key_details(self, *args):
         
+
         #Load StringVar object
         entry_name = args[0]
+
         str_var = self.entry_strings[args[1]]
         
         #self.area_1_entries[entry_name] = str_var.get()
@@ -509,6 +552,7 @@ class MyApp(customtkinter.CTk):
 
         if "qr" in entry_name.lower():
             self.controller.set_qr_code_entry(str_var.get())
+        
         # Do something with the updated value (for now, just print it)
         #print(f"Entry {args[0]} updated: {str_var.get()}")
 
@@ -517,6 +561,17 @@ class MyApp(customtkinter.CTk):
             for entry in self.controller.get_data_entries().keys():
                 #print(f"Is {key.lower()} equal to {entry.lower()}?")
                 if key.lower().replace("_"," ") in entry.lower():
+
+                    if key.lower() == "address":
+                        if not self.controller.get_data_entries()[entry]:
+                            self.preview_key_details[key].configure(
+                            text=str(f"{self.default_address}")
+                            )
+                        else:
+                            self.preview_key_details[key].configure(
+                            text=str(f"{self.controller.get_data_entries()[entry]}")
+                            )
+                        continue
                     new_key = key.replace("_"," ")
                     if "product" in new_key and self.controller.get_tab_info()[0] != "general_inventory":
                         new_key = "chemical name"
@@ -539,7 +594,7 @@ class MyApp(customtkinter.CTk):
             entry = self.entry_vars[entry_field].get()
 
         self.controller.on_submission2()
-
+        #messagebox.showinfo("", "Label generated successfully")
         #Create new barcode
         self.generate_barcode(self.controller.get_new_barcode())
         self.barcode_photo_prev.configure(dark_image=Image.open(self.controller.get_barcode_image()))
@@ -547,7 +602,6 @@ class MyApp(customtkinter.CTk):
 
         #Create new qr_code
         self.generate_qr_code(self.controller.get_qr_code_entry())
-        print(self.controller.get_qr_code_image())
         self.qr_code_preview_photo.configure(dark_image=Image.open(self.controller.get_qr_code_image()))
 
         image_width = self.qr_code_image_preview.size[0]
@@ -555,7 +609,7 @@ class MyApp(customtkinter.CTk):
         self.barcode_label_prev.grid(row=0, column=1, padx=0, sticky="w")
         self.qr_code_label.grid(row=0, column=2,padx=(0,5),sticky="e")
         #self.qr_code_label.grid(padx=(0,15))
-        messagebox.showinfo("showinfo", "Barcode & QR Code Generated")
+        
         
         self.capture_widget_as_image(self.preview_label_frame, "frame_capture.png")
         self.create_pdf("frame_capture.png", "label_output.pdf")
@@ -596,18 +650,19 @@ class MyApp(customtkinter.CTk):
         width = widget.winfo_width()
         height = widget.winfo_height()
 
-        img = ImageGrab.grab(bbox=(x, y, x + width, y + height))
-
-        img = img.convert("RGB")
+        img = ImageGrab.grab(bbox=(x, y, (x + width), (y + height)))
+        new_image = img.rotate(-90)
+        new_image = img.convert("RGB")
         
 
-        img.save(filename)
+        new_image.save(filename)
 
     def create_pdf(self,image_path, pdf_filename="output.pdf"):
         page_width, page_height = landscape(A4)  # A4 landscape size (842.0 x 595.276)
 
         c = canvas.Canvas(pdf_filename, pagesize=(page_width, page_height))
         img = Image.open(image_path)
+        
         img_width, img_height = img.size
 
         scale_factor = min(page_width / img_width, page_height / img_height)
@@ -616,7 +671,8 @@ class MyApp(customtkinter.CTk):
         new_height = img_height * scale_factor
         x_offset = (page_width - new_width) / 2
         y_offset = (page_height - new_height) / 2
-        c.drawImage(image_path, x_offset, y_offset, width=new_width, height=new_height)
+        c.drawImage(image_path, x_offset, y_offset+20, width=new_width * 0.25, height=new_height * 0.25)
+        c.drawImage(image_path, x_offset+200, y_offset+200, width=new_width * 0.5, height=new_height * 0.5)
         c.save()
 
     #Delete later
@@ -691,8 +747,13 @@ class MyApp(customtkinter.CTk):
                 text=""
             )
 
+            #Refresh barcode on tab switch
+            self.generate_barcode(self.controller.get_new_barcode())
+            self.barcode_photo_prev.configure(dark_image=Image.open(self.controller.get_barcode_image()))
+            self.barcode_label_prev.configure(image=self.barcode_photo_prev)
+
             #QR Code Preview Image
-            self.qr_code_image_preview = Image.open("C:/Users/Blake/Documents/ChemLabelApp/resources/images/qr_code.png")
+            self.qr_code_image_preview = Image.open("resources\images\qr_code.png")
             self.qr_code_preview_photo = customtkinter.CTkImage(dark_image=self.qr_code_image_preview, size=(80,80))
             self.qr_code_label = customtkinter.CTkLabel(
                 self.preview_label_frame, 
@@ -741,7 +802,7 @@ class MyApp(customtkinter.CTk):
                                 words = column.lower().split("_")
                                 words.remove("fk")
                                 formatted_table_columns[j] = words[0].title()
-
+                            
                             if key == "chemical_inventory":
                                 selected_data = ['date', 'volume']
                                 if column.lower() not in [x.lower() for x in selected_data]:
@@ -757,11 +818,30 @@ class MyApp(customtkinter.CTk):
                                 if "product" in column.lower():
                                     formatted_table_columns[j] = "Chemical Name"
                             
-                            if key == "general_inventory":
-                                selected_data = ['product_name','location']
-                                if formatted_table_columns[j].lower() not in [x.lower() for x in selected_data]:
+                            if self.controller.get_tab_info()[0] == "general_inventory":
+
+                                selected_data = ['product_name', 'fk_location_general_inventory', 'product_description']
+                                if column.lower() not in [x.lower() for x in selected_data]:
                                     continue
-                                #selected_data['product_name', ]
+
+                                product = []
+                                if "product_name" in column.lower():
+                                    product.append(column.lower())
+                                elif "location" in column.lower() and "product_name" in self.preview_key_details:
+                                    product.append(column.lower())
+                                elif "product_description" in column.lower() and "product_name" in self.preview_key_details and "location" in self.preview_key_details:
+                                    product.append(column.lower())
+                                
+                                if product:
+                                    label = customtkinter.CTkLabel(
+                                        self.preview_label_frame, 
+                                        text=formatted_table_columns[j] + ": ", 
+                                        text_color="black",
+                                        anchor="w",
+                                        wraplength=250,
+                                    )
+                                    label.grid(row=row, column=0, padx=10, sticky="w")
+
                             
                             # Create the label for the row
                             label = customtkinter.CTkLabel(
@@ -813,8 +893,10 @@ class MyApp(customtkinter.CTk):
             self.diamonds_preview_frame.place(x=270, y=160)
             self.diamonds_preview_frame.grid_propagate(False)
 
-            if self.controller.get_tab_info()[0] != "general_inventory":
-                self.add_hazard_symbols(self.stored_diamonds)
+            self.diamonds_preview_frame.bind("<Configure>", self.on_diamond_frame_configure)
+
+            # if self.controller.get_tab_info()[0] != "general_inventory":
+            #     self.add_hazard_symbols(self.stored_diamonds)
 
 
             #Hazards/Precautions
@@ -835,18 +917,26 @@ class MyApp(customtkinter.CTk):
             
             self.address_label = customtkinter.CTkLabel(
                 self.preview_label_frame, 
-                text="11351 Decimal Drive Louisville, KY 40299", 
+                text=self.default_address, 
                 text_color="black",
                 anchor="w",
                 wraplength=300,
                 fg_color="transparent"
             )
             self.address_label.grid(row=5, column=0, columnspan=1, padx=5,pady=(0,25),sticky="ew")
+            self.preview_key_details["address"] = self.address_label
             
 
-
-
-
+    def on_diamond_frame_configure(self,event):
+        frame_height = self.diamonds_preview_frame.winfo_height()
+    
+        if frame_height > 1:
+            if self.controller.get_tab_info()[0] != "general_inventory":
+                if frame_height == 270:
+                    self.diamonds_preview_frame.configure(width=180,height=180)
+                    self.add_hazard_symbols(self.stored_diamonds)
+            
+            self.diamonds_preview_frame.unbind("<Configure>")
             
     def update_preview_box(self,args):
         text=args[0]
@@ -855,7 +945,6 @@ class MyApp(customtkinter.CTk):
         self.hazards_preview_textbox.insert(tk.END, text)  # Insert the updated text
         self.stored_preview_text = text
         
-
         self.add_hazard_symbols(hazard_symbols)
                     
     
@@ -865,20 +954,22 @@ class MyApp(customtkinter.CTk):
         #self.diamonds_preview_frame.bind("<Configure>", self.update_image_size)
     
     def add_hazard_symbols(self,symbols=[]):
-
+        self.remove_all_children(self.diamonds_preview_frame)
+        
         #Exit function if no hazard symbols
         if not symbols: return
-
-        self.remove_all_children(self.diamonds_preview_frame)
+        
         min_width = 35  # Set a minimum width for the image
         num_hazard_labels = len(symbols)
-        label_width = max(int(self.diamonds_preview_frame.winfo_height() * (1/num_hazard_labels)) - 5,min_width)
-        label_height = max(int(self.diamonds_preview_frame.winfo_height() * (1/num_hazard_labels)) - 5,min_width)
+       
+        self.diamonds_preview_frame.configure(height=180)
+        print(self.diamonds_preview_frame.winfo_height())
+        label_width = max(int(180 * (1/num_hazard_labels)) - 5,min_width)
+        label_height = max(int(180 * (1/num_hazard_labels)) - 5,min_width)
         
         row, col = 0, 0
         max_rows = 3
         max_cols = 3
-
         #Center diamond symbols
         if num_hazard_labels > 2:
             for r in range(max_rows):

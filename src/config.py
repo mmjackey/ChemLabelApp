@@ -20,3 +20,9 @@ class AppConfig:
     FLAME = IMAGES / "Flame.png"
 
     OUTPUT_DIR = BASE_PATH / "outputs"
+
+    LOGO_PREVIEW = IMAGES / "sofab_logo2.png"
+
+    BARCODE = "barcode.png"
+
+
