@@ -281,14 +281,14 @@ class MyApp2(customtkinter.CTk):
         #self.qr_code_label.grid(padx=(0,15))
         
         
-        #self.capture_widget_as_image(self.preview_label_frame, "frame_capture.png")
-        #self.create_pdf("frame_capture.png", "label_output.pdf")
+        self.capture_widget_as_image(self.area_4.preview_label_frame, "frame_capture.png")
+        self.create_pdf("frame_capture.png", "label_output.pdf")
         
         #Refresh Entry boxes
         for box in self.area_1.entry_vars.values():
             box.delete(0, tk.END)
         
-        # print("PDF created successfully!")
+        print("PDF created successfully!")
         self.controller.set_id_info(self.inventory_type.replace(" ","_"),self.controller.next_id(self.controller.database.get_latest_barcode_id(self.inventory_type)))
         self.controller.set_new_barcode(self.controller.get_id_info()[self.inventory_type.replace(" ","_")])
         self.generate_barcode(self.controller.get_new_barcode())

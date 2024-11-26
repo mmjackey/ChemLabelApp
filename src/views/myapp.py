@@ -615,7 +615,7 @@ class MyApp(customtkinter.CTk):
         self.create_pdf("frame_capture.png", "label_output.pdf")
         
         
-        # print("PDF created successfully!")
+        print("PDF created successfully!")
     
     def generate_barcode(self,input_string):
         try:

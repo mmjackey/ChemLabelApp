@@ -195,11 +195,48 @@ class Database:
             print("Error: ", e)
             return []
     
+    def get_id_column_position(self,table_name):
+        try:
+            # Query the `information_schema.columns` to get the position of the 'id' column
+            query = """
+                SELECT ordinal_position
+                FROM information_schema.columns
+                WHERE table_name = %s
+                AND column_name = 'id'
+                AND table_schema = 'public'  -- Adjust schema if necessary
+            """
+            self.cursor.execute(query, (table_name,))
+            result = self.cursor.fetchone()
+            
+            if result:
+                return result[0]
+            else:
+                return None
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return None
+    
+    def get_column_order(self, table_name):
+        # Create a connection and cursor to the database
+
+        # Query to fetch column names ordered by their ordinal position
+        self.cur.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = %s
+            ORDER BY ordinal_position;
+        """, (table_name,))
+
+        # Fetch the column names and store them in a list
+        column_order = [row[0] for row in self.cur.fetchall()]
+
+        return column_order
 
     def insert_data_into_db(self,table,valid_entries):
-        columns = ', '.join(valid_entries.keys())  # Columns to insert
-        values_placeholders = ', '.join(["%s"] * len(valid_entries))  # Placeholder for values
-
+        columns = ', '.join(valid_entries.keys())  
+        values_placeholders = ', '.join(["%s"] * len(valid_entries)) 
+        print()
+        print(values_placeholders)
         sql_query = f"""
             INSERT INTO {table} ({columns})
             VALUES ({values_placeholders})
@@ -207,7 +244,9 @@ class Database:
         """
 
         values_to_insert = tuple(valid_entries.values())
-
+        values_to_insert = tuple(str(value) if value is not None else 'NULL' for value in values_to_insert)
+        print(table)
+        print(values_to_insert)
         try:
             self.cur.execute(sql_query, values_to_insert)
             

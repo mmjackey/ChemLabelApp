@@ -5,30 +5,13 @@ class Controller:
         self.database = Database
         self.pdf_generator = PDFGenerator
         self.hazard_precautions_data = HazardsPrecautionsData
-
-        # Convert entry types
         self.entry_parser = EntryParser
-
-        # Key details
         self.area_1_entries = {}
-
-        # Store table name of app tab
         self.cur_tab = {}
-
-        # Symbol images
         self.hazard_diamonds = self.hazard_precautions_data.HAZARD_DIAMONDS
-        
-        #Irrelevant
         self.qr_code_entry = {}
-
-        #Irrelevant
         self.page_size = 0
-
-        #String that holds current id
         self.barcode_final = ""
-
-        #Contains names of all chemicals in chemical inventory
-        #self.chemical_inventory_stock = []
 
         self.barcode_png = None
         self.qr_code_png = None
@@ -150,7 +133,7 @@ class Controller:
 
     def get_chemical_inventory_stock(self):
         return self.database.fetch_chemicals_stock()
-    
+
     def fix_columns(self,the_dict,table):
         table_def = table.replace("_"," ").title()
         if "batch" in table_def.lower():
@@ -164,21 +147,18 @@ class Controller:
         
         stop_early = False
         for table, db_column_list in table_columns_dict.items():
-            print("New table: ", table)
-
-            normalized_entries = {}
-            
+            #print("New table: ", table)
             for key, value in user_entries.items():
-                # If table is batch_inventory, stop processing early
                 if "batch" in table.lower():
                     stop_early = True
-                
+                # Normalize user column name (spaces to underscores, lowercase)
                 normalized_key = key.replace(" ", "_").lower()
                 
+                # Check for exact match first
                 matched = False
                 for db_col in db_column_list:
                     normalized_db_col = db_col.replace(" ", "_").lower()
-
+                    
                     if normalized_key == normalized_db_col:  # Exact match
                         normalized_entries[db_col] = value
                         matched = True
@@ -188,26 +168,35 @@ class Controller:
                     for db_col in db_column_list:
                         normalized_db_col = db_col.replace(" ", "_").lower()
                         if normalized_key in normalized_db_col: 
-                            # Delete old key if it exists in normalized_entries
                             if key in normalized_entries:
                                 del normalized_entries[key]
 
-                            # Store the value under the matching db column
                             normalized_entries[db_col] = value
                             print(f"Renamed '{key}' to '{db_col}' based on partial match.")
                             break
-    
-            if stop_early:
-                break
+                
+            # for key in normalized_entries:
+            #     for k, sub_dict in total_entries.items():
+            #         # Make sure sub_dict is a dictionary before trying to delete a key
+            #         if isinstance(sub_dict, dict) and key in sub_dict:
+            #             del sub_dict[key]
             
-            print(normalized_entries)
             total_entries[table] = normalized_entries
             if stop_early: break
 
             
-        valid_entries = total_entries
+        valid_entries = normalized_entries
         return valid_entries
         
+    def assort_columns(self, table_name, user_entries):
+        # Get the column order from the database
+        column_order = self.database.get_column_order(table_name)
+
+        # Reorder user entries based on column order
+        sorted_entries = {key: user_entries[key] for key in column_order if key in user_entries}
+
+        return sorted_entries
+
     def set_db_insertion(self,bool):
         #print("db_insertion set to: ", str(bool))
         #Check entries
@@ -245,7 +234,7 @@ class Controller:
         normalized_entries = {}
         
         for table in db_columns:
-            #print(table)
+            #print(f"Insert into {table}")
             if "batch" in table.lower():
                 stop_early = True
             for key, value in user_entries.items():
@@ -256,7 +245,8 @@ class Controller:
             
             valid_entries = normalized_entries
             if valid_entries:  # Only insert if there are valid entries
-                pass
+                valid_entries = self.assort_columns(table,valid_entries)
+                print(valid_entries)
                 self.database.insert_data_into_db(table,valid_entries)
             else:
                 print("No valid entries to insert.")
