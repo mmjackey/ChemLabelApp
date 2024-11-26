@@ -52,41 +52,42 @@ class Database:
 
         if 'product' in table_type:
             table_type = 'batch_inventory'
-        # Prevent SQL injection
-        sanitized_table_type = table_type.replace(" ", "_").lower()
         
-        # Attempt to retrieve the barcode ID
-        print(f"Attempting to retrieve latest {sanitized_table_type} ID...")
+        # # Prevent SQL injection
+        # sanitized_table_type = table_type.replace(" ", "_").lower()
+        
+        # # Attempt to retrieve the barcode ID
+        # print(f"Attempting to retrieve latest {sanitized_table_type} ID...")
 
-        # Check if the table exists
+        # # Check if the table exists
+        # self.cur.execute(
+        #     """SELECT EXISTS (
+        #         SELECT 1 FROM information_schema.tables
+        #         WHERE table_schema = 'public' 
+        #         AND table_name = %s
+        #     );""", (sanitized_table_type,)
+        # )
+        
+        #table_exists = self.cur.fetchone()[0]
+        
+        #if table_exists:
         self.cur.execute(
-            """SELECT EXISTS (
-                SELECT 1 FROM information_schema.tables
-                WHERE table_schema = 'public' 
-                AND table_name = %s
-            );""", (sanitized_table_type,)
+            f"""SELECT id
+            FROM {table_type.replace(" ","_")}
+            ORDER BY id DESC
+            LIMIT 1;"""
         )
         
-        table_exists = self.cur.fetchone()[0]
-        
-        if table_exists:
-            self.cur.execute(
-                f"""SELECT id
-                FROM {sanitized_table_type}
-                ORDER BY id DESC
-                LIMIT 1;"""
-            )
-            
-            latest_id = self.cur.fetchone()
-            if latest_id:
-                print(f"Latest {sanitized_table_type} ID retrieved")
-                return latest_id[0]
-            else:
-                print(f"No records found in {sanitized_table_type}")
-                return None
+        latest_id = self.cur.fetchone()
+        if latest_id:
+            print(f"Latest {table_type} ID retrieved")
+            return latest_id[0]
         else:
-            print(f"{sanitized_table_type} not found in database")
+            print(f"No records found in {table_type}")
             return None
+        #else:
+            #print(f"{sanitized_table_type} not found in database")
+            #return None
 
     
     def check_column_data_types(self, user_input_dict, table_name):
@@ -235,8 +236,6 @@ class Database:
     def insert_data_into_db(self,table,valid_entries):
         columns = ', '.join(valid_entries.keys())  
         values_placeholders = ', '.join(["%s"] * len(valid_entries)) 
-        print()
-        print(values_placeholders)
         sql_query = f"""
             INSERT INTO {table} ({columns})
             VALUES ({values_placeholders})
@@ -244,12 +243,18 @@ class Database:
         """
 
         values_to_insert = tuple(valid_entries.values())
-        values_to_insert = tuple(str(value) if value is not None else 'NULL' for value in values_to_insert)
-        print(table)
-        print(values_to_insert)
+        #values_to_insert = tuple(str(value) if value is not None else 'NULL' for value in values_to_insert)
         try:
-            self.cur.execute(sql_query, values_to_insert)
+            print(values_to_insert)
+            sql_query2 = f"""
+                INSERT INTO {table} ({columns})
+                VALUES ({values_to_insert})
+                RETURNING *;
+            """
             
+            #self.cur.execute(sql_query, values_to_insert)
+            self.cur.execute(sql_query2)
+
             inserted_row = self.cur.fetchone()
 
             # Save changes
