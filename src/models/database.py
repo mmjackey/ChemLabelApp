@@ -179,6 +179,23 @@ class Database:
             print(f"Error: {e}")
             return {}
 
+
+    def fetch_chemicals_stock(self):
+        try:
+            query = "SELECT name FROM chemical_inventory"
+            
+            self.cur.execute(query)
+            
+            rows = self.cur.fetchall()
+            
+            names = [row[0] for row in rows]
+            
+            return names
+        except Exception as e:
+            print("Error: ", e)
+            return []
+    
+
     def insert_data_into_db(self,table,valid_entries):
         columns = ', '.join(valid_entries.keys())  # Columns to insert
         values_placeholders = ', '.join(["%s"] * len(valid_entries))  # Placeholder for values
@@ -190,12 +207,13 @@ class Database:
         """
 
         values_to_insert = tuple(valid_entries.values())
-        
+
         try:
             self.cur.execute(sql_query, values_to_insert)
             
             inserted_row = self.cur.fetchone()
-            # Commit the transaction to save changes
+
+            # Save changes
             self.conn.commit()
             
             column_names = [desc[0] for desc in self.cur.description]

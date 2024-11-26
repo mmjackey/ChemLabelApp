@@ -5,13 +5,30 @@ class Controller:
         self.database = Database
         self.pdf_generator = PDFGenerator
         self.hazard_precautions_data = HazardsPrecautionsData
+
+        # Convert entry types
         self.entry_parser = EntryParser
+
+        # Key details
         self.area_1_entries = {}
+
+        # Store table name of app tab
         self.cur_tab = {}
+
+        # Symbol images
         self.hazard_diamonds = self.hazard_precautions_data.HAZARD_DIAMONDS
+        
+        #Irrelevant
         self.qr_code_entry = {}
+
+        #Irrelevant
         self.page_size = 0
+
+        #String that holds current id
         self.barcode_final = ""
+
+        #Contains names of all chemicals in chemical inventory
+        #self.chemical_inventory_stock = []
 
         self.barcode_png = None
         self.qr_code_png = None
@@ -131,6 +148,9 @@ class Controller:
     def set_get_pdf_path(self, file_dialog_callback):
         self.pdf_generator.save_pdf_callback = file_dialog_callback
 
+    def get_chemical_inventory_stock(self):
+        return self.database.fetch_chemicals_stock()
+    
     def fix_columns(self,the_dict,table):
         table_def = table.replace("_"," ").title()
         if "batch" in table_def.lower():
@@ -145,17 +165,20 @@ class Controller:
         stop_early = False
         for table, db_column_list in table_columns_dict.items():
             print("New table: ", table)
+
+            normalized_entries = {}
+            
             for key, value in user_entries.items():
+                # If table is batch_inventory, stop processing early
                 if "batch" in table.lower():
                     stop_early = True
-                # Normalize user column name (spaces to underscores, lowercase)
+                
                 normalized_key = key.replace(" ", "_").lower()
                 
-                # Check for exact match first
                 matched = False
                 for db_col in db_column_list:
                     normalized_db_col = db_col.replace(" ", "_").lower()
-                    
+
                     if normalized_key == normalized_db_col:  # Exact match
                         normalized_entries[db_col] = value
                         matched = True
@@ -165,12 +188,17 @@ class Controller:
                     for db_col in db_column_list:
                         normalized_db_col = db_col.replace(" ", "_").lower()
                         if normalized_key in normalized_db_col: 
+                            # Delete old key if it exists in normalized_entries
                             if key in normalized_entries:
                                 del normalized_entries[key]
 
+                            # Store the value under the matching db column
                             normalized_entries[db_col] = value
                             print(f"Renamed '{key}' to '{db_col}' based on partial match.")
                             break
+    
+            if stop_early:
+                break
             
             print(normalized_entries)
             total_entries[table] = normalized_entries

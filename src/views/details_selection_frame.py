@@ -19,7 +19,7 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         self.controller.set_id_info(self.root.inventory_type.replace(" ","_"),self.controller.next_id(self.controller.database.get_latest_barcode_id(self.root.inventory_type)))
         self.controller.set_new_barcode(self.controller.get_id_info()[self.root.inventory_type.replace(" ","_")])
         self.root.generate_barcode(self.controller.get_new_barcode())
-        
+
         table_columns_dict = self.controller.get_database_column_names(
             self.root.table_types[''.join(table)]
         )
@@ -58,7 +58,7 @@ class DetailSelectFrame(customtkinter.CTkFrame):
             formatted_table_columns = self.format_names(column_list)
             if "product" in ''.join(table).lower():
                 if "batch" in key.lower():
-                    row = self.add_batch_entries(column_list)
+                    row = self.add_batch_entries(column_list) + 1
             else:
                 for j, column in enumerate(column_list):
                     # print(j," ",column)
@@ -87,7 +87,7 @@ class DetailSelectFrame(customtkinter.CTkFrame):
 
                     self.entry_strings.append(sv)
                     sv.trace("w", lambda *args, name=formatted_table_columns[j], index=entry_count: self.update_key_details(name,index))
-
+                    
 
                     # Create the entry for the column
                     entry = customtkinter.CTkEntry(self,textvariable=sv)
@@ -200,8 +200,27 @@ class DetailSelectFrame(customtkinter.CTkFrame):
             if row >= max_rows_per_column:
                 row = 1
                 col += 2 
+        
+        self.extra_batch_columns(row,col)
         return row
+
+        
     
+    def extra_batch_columns(self,rows,cols):
+        self.inventory = self.controller.get_chemical_inventory_stock()
+        
+        # Create and place the dropdown (CTkOptionMenu) widget
+        self.dropdown = customtkinter.CTkOptionMenu(
+            self,
+            values=self.inventory, 
+            fg_color=("gray20", "gray40"), 
+            button_color=("gray30", "gray50"), 
+            width=200
+        )
+        
+        self.dropdown.grid(row=rows+2, column=cols,padx=10, pady=5)
+        self.dropdown.set("Choose Chemical(s) from Inventory")
+
     def update_key_details(self, *args):
 
         #Load StringVar object
