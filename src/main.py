@@ -1,11 +1,9 @@
 from controller import Controller
+from entry_parser import EntryParser
 from models.database import Database
 from models.hazard_data import HazardsPrecautionData
 from models.pdf_generator import PDFGenerator
-from views.app import App
-from views.myapp import MyApp
 from views.myapp2 import MyApp2
-from entry_parser import EntryParser
 
 
 def main():
