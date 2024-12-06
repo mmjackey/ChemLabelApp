@@ -52,42 +52,42 @@ class Database:
 
         if 'product' in table_type:
             table_type = 'batch_inventory'
+            
+        # Prevent SQL injection
+        sanitized_table_type = table_type.replace(" ", "_").lower()
         
-        # # Prevent SQL injection
-        # sanitized_table_type = table_type.replace(" ", "_").lower()
-        
-        # # Attempt to retrieve the barcode ID
-        # print(f"Attempting to retrieve latest {sanitized_table_type} ID...")
+        # Attempt to retrieve the barcode ID
+        print(f"Attempting to retrieve latest {sanitized_table_type} ID...")
 
-        # # Check if the table exists
-        # self.cur.execute(
-        #     """SELECT EXISTS (
-        #         SELECT 1 FROM information_schema.tables
-        #         WHERE table_schema = 'public' 
-        #         AND table_name = %s
-        #     );""", (sanitized_table_type,)
-        # )
-        
-        #table_exists = self.cur.fetchone()[0]
-        
-        #if table_exists:
+        # Check if the table exists
         self.cur.execute(
-            f"""SELECT id
-            FROM {table_type.replace(" ","_")}
-            ORDER BY id DESC
-            LIMIT 1;"""
+            """SELECT EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' 
+                AND table_name = %s
+            );""", (sanitized_table_type,)
         )
         
-        latest_id = self.cur.fetchone()
-        if latest_id:
-            print(f"Latest {table_type} ID retrieved")
-            return latest_id[0]
+        table_exists = self.cur.fetchone()[0]
+        
+        if table_exists:
+            self.cur.execute(
+                f"""SELECT id
+                FROM {sanitized_table_type}
+                ORDER BY id DESC
+                LIMIT 1;"""
+            )
+            
+            latest_id = self.cur.fetchone()
+            if latest_id:
+                print(f"Latest {sanitized_table_type} ID retrieved")
+                return latest_id[0]
+            else:
+                print(f"No records found in {sanitized_table_type}")
+                return None
         else:
-            print(f"No records found in {table_type}")
+            print(f"{sanitized_table_type} not found in database")
             return None
-        #else:
-            #print(f"{sanitized_table_type} not found in database")
-            #return None
 
     
     def check_column_data_types(self, user_input_dict, table_name):
