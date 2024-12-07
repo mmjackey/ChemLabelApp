@@ -32,12 +32,17 @@ class DetailSelectFrame(customtkinter.CTkFrame):
 
         # Current tab is accessible from controller class
         if table_columns_dict:
-            self.controller.set_tab("".join(table))
-        # print(self.controller.get_tab_info())
-
+            self.parent.current_tab = "".join(table)
         # Store all EntryBox widgets
-        self.entry_vars = {}
+        self.entry_tables = {
+            key: {item: None for item in value}
+            for key, value in table_columns_dict.items()
+        }
+        self.entry_tables["additional"] = {}
 
+        self.controller.add_tab_entries(
+            self.parent.current_tab, self.entry_tables
+        )
         # *Important* - Store entrybox values (when they change)
         # self.area_1_entries = {}
 
@@ -54,7 +59,6 @@ class DetailSelectFrame(customtkinter.CTkFrame):
             font=customtkinter.CTkFont(size=18, weight="bold"),
         )
         self.area_1_header.grid(row=0, column=0, padx=10, pady=10, sticky="w")
-        self.add_batch_entries(table_columns_dict)
 
         max_rows_per_column, row, col = self.add_batch_entries(
             table_columns_dict
@@ -65,21 +69,26 @@ class DetailSelectFrame(customtkinter.CTkFrame):
 
         sv2 = customtkinter.StringVar()
 
-        # self.entry_strings.append(sv2)
-        # sv2.trace(
-        #    "w",
-        #    lambda *args, name="address", index=entry_count: self.update_key_details(
-        #        name, index
-        #    ),
-        # )
+        self.entry_strings.append(sv2)
+        sv2.trace(
+            "w",
+            lambda *args, name="address", index=row: self.update_key_details(
+                name, index
+            ),
+        )
 
         address_entry = customtkinter.CTkEntry(self, textvariable=sv2)
         address_entry.grid(
             row=row, column=col + 1, padx=10, pady=5, sticky="w"
         )
-
         # Add address string
-        self.entry_vars["address"] = address_entry
+        self.entry_tables["additional"]["address"] = address_entry
+
+        # for key, value in self.entry_tables.items():
+        #     for k, v in value.items():
+        #         if "id" in k.lower():
+        #             continue
+        #         print(k, v.get())
 
         self.add_to_db_checkbox(max_rows_per_column)
 
@@ -126,7 +135,6 @@ class DetailSelectFrame(customtkinter.CTkFrame):
                     self, text=formatted_table_columns[j]
                 )
                 label.grid(row=row, column=col, padx=10, pady=5, sticky="ew")
-                # print(formatted_table_columns[j],f"Label Placed Row: {row} | Col: {col}")
                 if row == max_rows_per_column - 1:
                     label.grid(row=row, column=col, padx=20, pady=5)
 
@@ -148,16 +156,16 @@ class DetailSelectFrame(customtkinter.CTkFrame):
                     default_sds = "https://drive.google.com/file/d/1HfsqJG-goraXZHW8OwokIUNG_nVDM_Uz/view"
                     entry.insert(0, default_sds)
                     self.controller.set_qr_code_entry(default_sds)
+
                 entry.grid(
                     row=row, column=col + 1, padx=10, pady=5, sticky="w"
                 )
 
-                # print(formatted_table_columns[j],f"Entry Placed Row: {row} | Col: {col+1}")
                 if row == max_rows_per_column - 1:
                     entry.grid(row=row, column=col + 1, padx=10, pady=5)
 
                 # Store the entry widget in a dictionary (self.entry_vars)
-                self.entry_vars[column] = entry
+                self.entry_tables[key][column] = entry
 
                 row += 1
                 entry_count += 1
@@ -183,7 +191,6 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         self.dropdown.set("Choose Chemical(s) from Inventory")
 
     def update_key_details(self, *args):
-
         # Load StringVar object
         entry_name = args[0]
 

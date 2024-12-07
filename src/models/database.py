@@ -12,6 +12,12 @@ class Database:
                 "INVENTORY_TYPES"
             ]
 
+        self.tab_entries = {
+            "Chemical Inventory": None,
+            "General Inventory": None,
+            "Product Inventory (Batch Process)": None,
+        }
+
         self.conn = psycopg2.connect(
             database="inventory_management",
             user="postgres",
@@ -255,66 +261,76 @@ class Database:
 
         return column_order
 
-    def insert_data_into_db(self, table, valid_entries):
-        columns = ", ".join(valid_entries.keys())
-
-        values_placeholders = ", ".join(["%s"] * len(valid_entries))
-        sql_query = f"""
-            INSERT INTO {table} ({columns})
-            VALUES ({values_placeholders})
+    def insert_data_into_db(self, table, columns, values):
+        query = f"""
+            INSERT INTO {table} ({', '.join(columns)})
+            VALUES ({', '.join(f"{value}" for value in values)})
             RETURNING *;
         """
+        print(query)
+        self.cur.execute(query)
+        self.conn.commit()
 
-        values_to_insert = tuple(valid_entries.values())
-        # values_to_insert = tuple(str(value) if value is not None else 'NULL' for value in values_to_insert)
-        try:
-            sql_query2 = f"""
-                INSERT INTO {table} ({columns})
-                VALUES ({values_to_insert})
-                RETURNING *;
-            """
+    # def insert_data_into_db(self, table, valid_entries):
+    #    columns = ", ".join(valid_entries.keys())
 
-            # self.cur.execute(sql_query, values_to_insert)
-            self.cur.execute(sql_query2)
+    #    values_placeholders = ", ".join(["%s"] * len(valid_entries))
+    #    sql_query = f"""
+    #        INSERT INTO {table} ({columns})
+    #        VALUES ({values_placeholders})
+    #        RETURNING *;
+    #    """
 
-            inserted_row = self.cur.fetchone()
+    #    values_to_insert = tuple(valid_entries.values())
+    #    # values_to_insert = tuple(str(value) if value is not None else 'NULL' for value in values_to_insert)
+    #    try:
+    #        sql_query2 = f"""
+    #            INSERT INTO {table} ({columns})
+    #            VALUES ({values_to_insert})
+    #            RETURNING *;
+    #        """
 
-            # Save changes
-            self.conn.commit()
+    #        # self.cur.execute(sql_query, values_to_insert)
+    #        self.cur.execute(sql_query2)
 
-            column_names = [desc[0] for desc in self.cur.description]
-            inserted_dict = dict(zip(column_names, inserted_row))
+    #        inserted_row = self.cur.fetchone()
 
-            print("Data inserted successfully.")
-            print(inserted_dict)
+    #        # Save changes
+    #        self.conn.commit()
 
-        except Exception as e:
-            print(f"Error inserting data: {e}")
-            self.conn.rollback()
-        finally:
-            # self.cur.close()
-            # self.conn.close()
-            pass
+    #        column_names = [desc[0] for desc in self.cur.description]
+    #        inserted_dict = dict(zip(column_names, inserted_row))
 
-    # USE ONCE - should not be adding tables this way
-    # def add_details_table(self):
-    #     change_owner_query = "ALTER TABLE chemical_details OWNER TO database_dev;"
-    #     self.cur.execute(change_owner_query)
-    #     self.conn.commit()
-    #     print("Sucessfully changed owner to database_dev")
-    #     create_table_query = """
-    #     CREATE TABLE chemical_details (
-    #         id VARCHAR(12) PRIMARY KEY,  -- Changed to character varying (up to 12 characters)
-    #         chemical_name VARCHAR(255),  -- Variable-length string for chemical name
-    #         volume REAL,  -- Changed to REAL (floating-point type)
-    #         concentration REAL,  -- Changed to REAL (floating-point type)
-    #         date_created TEXT,  -- Changed to TEXT type (to store as a string)
-    #         order_url VARCHAR(255),  -- Variable-length string for order URL (max 255 characters)
-    #         image_url VARCHAR(255)   -- Variable-length string for image URL (max 255 characters)
-    #     );
-    #     """
-    #     self.cur.execute(create_table_query)
-    #     self.conn.commit()
+    #        print("Data inserted successfully.")
+    #        print(inserted_dict)
+
+    #    except Exception as e:
+    #        print(f"Error inserting data: {e}")
+    #        self.conn.rollback()
+    #    finally:
+    #        # self.cur.close()
+    #        # self.conn.close()
+    #        pass
+
+    ## USE ONCE - should not be adding tables this way
+    ## def add_details_table(self):
+    ##     change_owner_query = "ALTER TABLE chemical_details OWNER TO database_dev;"
+    ##     self.cur.execute(change_owner_query)
+    ##     self.conn.commit()
+    ##     print("Sucessfully changed owner to database_dev")
+    ##     create_table_query = """
+    ##     CREATE TABLE chemical_details (
+    ##         id VARCHAR(12) PRIMARY KEY,  -- Changed to character varying (up to 12 characters)
+    ##         chemical_name VARCHAR(255),  -- Variable-length string for chemical name
+    ##         volume REAL,  -- Changed to REAL (floating-point type)
+    ##         concentration REAL,  -- Changed to REAL (floating-point type)
+    ##         date_created TEXT,  -- Changed to TEXT type (to store as a string)
+    ##         order_url VARCHAR(255),  -- Variable-length string for order URL (max 255 characters)
+    ##         image_url VARCHAR(255)   -- Variable-length string for image URL (max 255 characters)
+    ##     );
+    ##     """
+    ##     self.cur.execute(create_table_query)
+    ##     self.conn.commit()
 
 
 if __name__ == "__main__":

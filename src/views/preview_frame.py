@@ -88,8 +88,7 @@ class PreviewFrame(customtkinter.CTkFrame):
             self.controller.set_page_size(page_size)
         self.preview_label_frame.grid_propagate(False)
         self.create_preview_label(
-            self.orientation_option_menu.get(),
-            tab=self.controller.get_tab_info()[0],
+            self.orientation_option_menu.get(), tab=self.parent.current_tab
         )
 
     def create_preview_label(self, selection, tab=None, hazards=True):
@@ -165,10 +164,7 @@ class PreviewFrame(customtkinter.CTkFrame):
             self.hazards_preview_textbox.grid(
                 row=4, column=0, columnspan=1, padx=2, sticky="ew"
             )
-            if (
-                hazards
-                or self.controller.get_tab_info()[0] != "general_inventory"
-            ):
+            if hazards or self.parent.current_tab != "general_inventory":
                 self.hazards_preview_textbox.insert(
                     tk.END, self.root.stored_preview_text
                 )
@@ -199,7 +195,7 @@ class PreviewFrame(customtkinter.CTkFrame):
             2, weight=1
         )  # Empty column for spacing
 
-        if self.controller.get_tab_info()[0] != "general_inventory":
+        if self.parent.current_tab != "general_inventory":
             self.add_hazard_symbols(self.root.stored_diamonds)
 
     def create_image_label(
@@ -268,7 +264,7 @@ class PreviewFrame(customtkinter.CTkFrame):
             return True
         if (
             key == "general_product"
-            and self.controller.get_tab_info()[0] != "general_inventory"
+            and self.parent.current_tab != "general_inventory"
             and "product" in column_lower
         ):
             return True
@@ -298,7 +294,7 @@ class PreviewFrame(customtkinter.CTkFrame):
         frame_height = self.diamonds_preview_frame.winfo_height()
 
         if frame_height > 1:
-            if self.controller.get_tab_info()[0] != "general_inventory":
+            if self.parent.current_tab != "general_inventory":
                 if frame_height == 270:
                     self.diamonds_preview_frame.configure(
                         width=120, height=120
@@ -384,6 +380,6 @@ class PreviewFrame(customtkinter.CTkFrame):
         self.controller.clear_data_entries()
         self.create_preview_label(
             self.orientation_option_menu.get(),
-            self.controller.get_tab_info()[0],
+            self.parent.current_tab,
             hazards=False,
         )
