@@ -33,7 +33,6 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         # Current tab is accessible from controller class
         if table_columns_dict:
             self.controller.set_tab("".join(table))
-
         # print(self.controller.get_tab_info())
 
         # Store all EntryBox widgets
@@ -55,92 +54,24 @@ class DetailSelectFrame(customtkinter.CTkFrame):
             font=customtkinter.CTkFont(size=18, weight="bold"),
         )
         self.area_1_header.grid(row=0, column=0, padx=10, pady=10, sticky="w")
-        max_rows_per_column = 7
-        row = 1
-        col = 0
-        entry_count = 0
-        for i, (key, column_list) in enumerate(table_columns_dict.items()):
-            # table_label_text = self.label_tables(key, i)
-            formatted_table_columns = self.format_names(column_list)
-            if "product" in "".join(table).lower():
-                if "batch" in key.lower():
-                    row = self.add_batch_entries(column_list) + 1
-            else:
-                for j, column in enumerate(column_list):
-                    # print(j," ",column)
-                    if "id" in column.lower() or "hazard" in column.lower():
-                        continue
-                    elif "quantity" in column.lower():
-                        words = column.lower().split("_")
-                        formatted_table_columns[j] = words[0].title()
-                    elif (
-                        "fk" in column.lower()
-                    ):  # Change fk_location_general_inventory to 'Location'
-                        words = column.lower().split("_")
-                        words.remove("fk")
-                        formatted_table_columns[j] = words[0].title()
+        self.add_batch_entries(table_columns_dict)
 
-                    # Create the label for the column
-                    label = customtkinter.CTkLabel(
-                        self, text=formatted_table_columns[j]
-                    )
-                    label.grid(
-                        row=row, column=col, padx=10, pady=5, sticky="ew"
-                    )
-                    # print(formatted_table_columns[j],f"Label Placed Row: {row} | Col: {col}")
-                    if row == max_rows_per_column - 1:
-                        label.grid(row=row, column=col, padx=20, pady=5)
-
-                    sv = customtkinter.StringVar()
-
-                    self.entry_strings.append(sv)
-                    sv.trace(
-                        "w",
-                        lambda *args, name=formatted_table_columns[
-                            j
-                        ], index=entry_count: self.update_key_details(
-                            name, index
-                        ),
-                    )
-
-                    # Create the entry for the column
-                    entry = customtkinter.CTkEntry(self, textvariable=sv)
-
-                    # Insert default SDS
-                    if "qr" in formatted_table_columns[j].lower():
-                        default_sds = "https://drive.google.com/file/d/1HfsqJG-goraXZHW8OwokIUNG_nVDM_Uz/view"
-                        entry.insert(0, default_sds)
-                        self.controller.set_qr_code_entry(default_sds)
-                    entry.grid(
-                        row=row, column=col + 1, padx=10, pady=5, sticky="w"
-                    )
-
-                    # print(formatted_table_columns[j],f"Entry Placed Row: {row} | Col: {col+1}")
-                    if row == max_rows_per_column - 1:
-                        entry.grid(row=row, column=col + 1, padx=10, pady=5)
-
-                    # Store the entry widget in a dictionary (self.entry_vars)
-                    self.entry_vars[column] = entry
-
-                    row += 1
-                    entry_count += 1
-                    if row >= max_rows_per_column:
-                        row = 1
-                        col += 2
-
+        max_rows_per_column, row, col = self.add_batch_entries(
+            table_columns_dict
+        )
         # Address Entry
         address_label = customtkinter.CTkLabel(self, text="Address:")
         address_label.grid(row=row, column=col, padx=10, pady=5, sticky="ew")
 
         sv2 = customtkinter.StringVar()
 
-        self.entry_strings.append(sv2)
-        sv2.trace(
-            "w",
-            lambda *args, name="address", index=entry_count: self.update_key_details(
-                name, index
-            ),
-        )
+        # self.entry_strings.append(sv2)
+        # sv2.trace(
+        #    "w",
+        #    lambda *args, name="address", index=entry_count: self.update_key_details(
+        #        name, index
+        #    ),
+        # )
 
         address_entry = customtkinter.CTkEntry(self, textvariable=sv2)
         address_entry.grid(
@@ -172,68 +103,73 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         row = 1
         col = 0
         entry_count = 0
-        formatted_table_columns = self.format_names(table)
-        for j, column in enumerate(table):
-            if "id" in column.lower() or "hazard" in column.lower():
-                continue
-            elif "quantity" in column.lower():
-                words = column.lower().split("_")
-                formatted_table_columns[j] = words[0].title()
-            elif (
-                "fk" in column.lower()
-            ):  # Change fk_location_general_inventory to 'Location'
-                words = column.lower().split("_")
-                words.remove("fk")
-                formatted_table_columns[j] = words[0].title()
+        for key, v in table.items():
+            column_list = table[key]
+            formatted_table_columns = self.format_names(column_list)
 
-            # Create the label for the column
-            label = customtkinter.CTkLabel(
-                self, text=formatted_table_columns[j]
-            )
-            label.grid(row=row, column=col, padx=10, pady=5, sticky="ew")
-            # print(formatted_table_columns[j],f"Label Placed Row: {row} | Col: {col}")
-            if row == max_rows_per_column - 1:
-                label.grid(row=row, column=col, padx=20, pady=5)
+            for j, column in enumerate(column_list):
+                if "id" in column.lower() or "hazard" in column.lower():
+                    continue
+                elif "quantity" in column.lower():
+                    words = column.lower().split("_")
+                    words = " ".join(words)
+                    formatted_table_columns[j] = words.title()
+                elif (
+                    "fk" in column.lower()
+                ):  # Change fk_location_general_inventory to 'Location'
+                    words = column.lower().split("_")
+                    words.remove("fk")
+                    formatted_table_columns[j] = words[0].title()
 
-            sv = customtkinter.StringVar()
+                # Create the label for the column
+                label = customtkinter.CTkLabel(
+                    self, text=formatted_table_columns[j]
+                )
+                label.grid(row=row, column=col, padx=10, pady=5, sticky="ew")
+                # print(formatted_table_columns[j],f"Label Placed Row: {row} | Col: {col}")
+                if row == max_rows_per_column - 1:
+                    label.grid(row=row, column=col, padx=20, pady=5)
 
-            self.entry_strings.append(sv)
-            sv.trace(
-                "w",
-                lambda *args, name=formatted_table_columns[
-                    j
-                ], index=entry_count: self.update_key_details(name, index),
-            )
+                sv = customtkinter.StringVar()
 
-            # Create the entry for the column
-            entry = customtkinter.CTkEntry(self, textvariable=sv)
+                self.entry_strings.append(sv)
+                sv.trace(
+                    "w",
+                    lambda *args, name=formatted_table_columns[
+                        j
+                    ], index=entry_count: self.update_key_details(name, index),
+                )
 
-            # Insert default SDS
-            if "qr" in formatted_table_columns[j].lower():
-                default_sds = "https://drive.google.com/file/d/1HfsqJG-goraXZHW8OwokIUNG_nVDM_Uz/view"
-                entry.insert(0, default_sds)
-                self.controller.set_qr_code_entry(default_sds)
-            entry.grid(row=row, column=col + 1, padx=10, pady=5, sticky="w")
+                # Create the entry for the column
+                entry = customtkinter.CTkEntry(self, textvariable=sv)
 
-            # print(formatted_table_columns[j],f"Entry Placed Row: {row} | Col: {col+1}")
-            if row == max_rows_per_column - 1:
-                entry.grid(row=row, column=col + 1, padx=10, pady=5)
+                # Insert default SDS
+                if "qr" in formatted_table_columns[j].lower():
+                    default_sds = "https://drive.google.com/file/d/1HfsqJG-goraXZHW8OwokIUNG_nVDM_Uz/view"
+                    entry.insert(0, default_sds)
+                    self.controller.set_qr_code_entry(default_sds)
+                entry.grid(
+                    row=row, column=col + 1, padx=10, pady=5, sticky="w"
+                )
 
-            # Store the entry widget in a dictionary (self.entry_vars)
-            self.entry_vars[column] = entry
+                # print(formatted_table_columns[j],f"Entry Placed Row: {row} | Col: {col+1}")
+                if row == max_rows_per_column - 1:
+                    entry.grid(row=row, column=col + 1, padx=10, pady=5)
 
-            row += 1
-            entry_count += 1
-            if row >= max_rows_per_column:
-                row = 1
-                col += 2
+                # Store the entry widget in a dictionary (self.entry_vars)
+                self.entry_vars[column] = entry
+
+                row += 1
+                entry_count += 1
+                if row >= max_rows_per_column:
+                    row = 1
+                    col += 2
 
         self.extra_batch_columns(row, col)
-        return row
+        return max_rows_per_column, row, col
 
     def extra_batch_columns(self, rows, cols):
         self.inventory = self.controller.get_chemical_inventory_stock()
-        print(self.inventory)
         # Create and place the dropdown (CTkOptionMenu) widget
         self.dropdown = customtkinter.CTkOptionMenu(
             self,
@@ -311,4 +247,3 @@ class DetailSelectFrame(customtkinter.CTkFrame):
             return [name.replace("_", " ").title() for name in names]
         elif type(names) is str:
             return names.replace("_", " ").title()
-

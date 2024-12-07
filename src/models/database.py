@@ -217,7 +217,7 @@ class Database:
 
     def fetch_chemicals_stock(self):
         try:
-            query = "SELECT name FROM chemical_inventory"
+            query = "SELECT chemical_name FROM chemical_details"
 
             self.cur.execute(query)
 
@@ -257,6 +257,7 @@ class Database:
 
     def insert_data_into_db(self, table, valid_entries):
         columns = ", ".join(valid_entries.keys())
+
         values_placeholders = ", ".join(["%s"] * len(valid_entries))
         sql_query = f"""
             INSERT INTO {table} ({columns})
@@ -267,7 +268,6 @@ class Database:
         values_to_insert = tuple(valid_entries.values())
         # values_to_insert = tuple(str(value) if value is not None else 'NULL' for value in values_to_insert)
         try:
-            print(values_to_insert)
             sql_query2 = f"""
                 INSERT INTO {table} ({columns})
                 VALUES ({values_to_insert})
