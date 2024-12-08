@@ -70,12 +70,6 @@ class Controller:
     def set_data_entries(self, key, value):
         self.area_1_entries[key] = value
 
-    def clear_data_entries(self):
-        self.area_1_entries = {}
-
-    def get_data_entries(self):
-        return self.area_1_entries
-
     def set_page_size(self, size):
         self.page_size = size
 
@@ -126,6 +120,11 @@ class Controller:
 
     def get_chemical_inventory_stock(self):
         return self.database.fetch_chemicals_stock()
+
+    def clear_tab_entries(self, tab):
+        tab_entries = self.database.tab_entries
+        for table, column in tab_entries[tab].items():
+            tab_entries[tab][table].clear()
 
     def add_tab_entries(self, tab, dictionary):
         self.database.tab_entries[tab] = dictionary
@@ -230,7 +229,6 @@ class Controller:
 
         # Details from tab
         selected_details = {}
-        selected_details2 = {}
 
         # Create new barcode id
         details2 = self.next_id(

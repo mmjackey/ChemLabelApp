@@ -377,7 +377,7 @@ class PreviewFrame(customtkinter.CTkFrame):
 
     def switch_preview_box(self):
         # Clear entries from current tab
-        self.controller.clear_data_entries()
+        self.controller.clear_tab_entries(self.parent.current_tab)
         self.create_preview_label(
             self.orientation_option_menu.get(),
             self.parent.current_tab,

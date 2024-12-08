@@ -2,37 +2,37 @@ import customtkinter
 
 
 class DetailSelectFrame(customtkinter.CTkFrame):
-    def __init__(self, parent, controller, table, root):
+    def __init__(self, parent, controller, table):
         super().__init__(parent)
 
         self.parent = parent
-        self.root = root
         self.controller = controller
 
         self.entry_strings = []
 
         self.controller.set_id_info(
-            self.root.inventory_type.replace(" ", "_"),
+            self.parent.inventory_type.replace(" ", "_"),
             self.controller.next_id(
                 self.controller.database.get_latest_barcode_id(
-                    self.root.inventory_type
+                    self.parent.inventory_type
                 )
             ),
         )
         self.controller.set_new_barcode(
             self.controller.get_id_info()[
-                self.root.inventory_type.replace(" ", "_")
+                self.parent.inventory_type.replace(" ", "_")
             ]
         )
-        self.root.generate_barcode(self.controller.get_new_barcode())
+        self.parent.generate_barcode(self.controller.get_new_barcode())
 
         table_columns_dict = self.controller.get_database_column_names(
-            self.root.table_types["".join(table)]
+            self.parent.table_types["".join(table)]
         )
 
         # Current tab is accessible from controller class
         if table_columns_dict:
             self.parent.current_tab = "".join(table)
+
         # Store all EntryBox widgets
         self.entry_tables = {
             key: {item: None for item in value}
@@ -43,15 +43,12 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         self.controller.add_tab_entries(
             self.parent.current_tab, self.entry_tables
         )
-        # *Important* - Store entrybox values (when they change)
-        # self.area_1_entries = {}
 
-        # Other
         # Refresh product info area
-        for widget in self.root.area_1_frames:
+        for widget in self.parent.area_1_frames:
             widget.destroy()
 
-        self.root.area_1_frames.append(self)
+        self.parent.area_1_frames.append(self)
 
         self.area_1_header = customtkinter.CTkLabel(
             self,
@@ -101,7 +98,7 @@ class DetailSelectFrame(customtkinter.CTkFrame):
             variable=self.add_to_db_var,  # Bind to the StringVar to track its state
             onvalue="on",  # The value when the checkbox is checked
             offvalue="off",  # The value when the checkbox is unchecked
-            command=self.root.checkbox_changed,  # Function to call when the state changes
+            command=self.parent.checkbox_changed,  # Function to call when the state changes
         )
         self.db_insertion_checkbox.grid(
             row=rows + 1, column=0, padx=10, pady=10, sticky="sw"
@@ -205,18 +202,18 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         # print(f"Entry {args[0]} updated: {str_var.get()}")
 
         # Set preview text labels
-        for key in self.root.preview_key_details.keys():
+        for key in self.parent.preview_key_details.keys():
             for entry in self.controller.get_data_entries().keys():
                 # print(f"Is {key.lower()} equal to {entry.lower()}?")
                 if key.lower().replace("_", " ") in entry.lower():
 
                     if key.lower() == "address":
                         if not self.controller.get_data_entries()[entry]:
-                            self.root.preview_key_details[key].configure(
-                                text=str(f"{self.root.default_address}")
+                            self.parent.preview_key_details[key].configure(
+                                text=str(f"{self.parent.default_address}")
                             )
                         else:
-                            self.root.preview_key_details[key].configure(
+                            self.parent.preview_key_details[key].configure(
                                 text=str(
                                     f"{self.controller.get_data_entries()[entry]}"
                                 )
@@ -229,7 +226,7 @@ class DetailSelectFrame(customtkinter.CTkFrame):
                         != "general_inventory"
                     ):
                         new_key = "chemical name"
-                    self.root.preview_key_details[key].configure(
+                    self.parent.preview_key_details[key].configure(
                         text=str(
                             f"{new_key.title()}: {self.controller.get_data_entries()[entry]}"
                         )
@@ -242,7 +239,7 @@ class DetailSelectFrame(customtkinter.CTkFrame):
                         != "general_inventory"
                     ):
                         new_key = "chemical name"
-                    self.root.preview_key_details[key].configure(
+                    self.parent.preview_key_details[key].configure(
                         text=str(
                             f"{new_key.title()}: {self.controller.get_data_entries()[entry]}"
                         )

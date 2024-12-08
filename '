@@ -112,7 +112,7 @@ class MyApp2(customtkinter.CTk):
             row=0, column=last_column + 1, padx=10, pady=10
         )
 
-    # Chemical Inventory, General Inventory, Batch Inventory, Submit
+    # Chemical Inventory, General Inventory, Batch Inventory,  Submit
     def initialize_tab_buttons(self, table):
         tab_column_index = 1
         for i, key in enumerate(table):
@@ -120,7 +120,7 @@ class MyApp2(customtkinter.CTk):
             topbar_button = customtkinter.CTkButton(
                 self.topbar_frame,
                 text=key,
-                command=lambda name=key: self.sidebar_button_event(name),
+                command=lambda name=key: self.sidebar_button_event(key),
                 fg_color="transparent",
                 border_width=0,
             )
