@@ -41,6 +41,7 @@ class PreviewFrame(customtkinter.CTkFrame):
         self.preview_label_frame.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
 
         self.hazard_preview_font_size = 13
+        self.details_preview_font_size = 13
 
         # Set initial landscape preview
         self.update_frame(self.orientation_option_menu.get())
@@ -102,6 +103,7 @@ class PreviewFrame(customtkinter.CTkFrame):
 
             # Create and filter table columns based on tab selection
             
+            self.add_details(tab)
             # for table in self.root.table_types:
             #     if "batch" in tab:
             #         tab = "product_inventory"
@@ -113,7 +115,7 @@ class PreviewFrame(customtkinter.CTkFrame):
 
             # Key details Textbox
             self.details_preview_textbox = customtkinter.CTkTextbox(
-                self.preview_label_frame, height=85, width=275, fg_color="transparent", text_color="black", wrap="word"
+                self.preview_label_frame, height=100, width=275, fg_color="transparent", text_color="black", wrap="word"
             )
             self.details_preview_textbox.grid(row=3, column=0, columnspan=1, padx=2, sticky="ew")
             #self.details_preview_textbox.bind("<KeyRelease>", lambda event: self.adjust_font_size(self.details_preview_textbox))
@@ -197,12 +199,16 @@ class PreviewFrame(customtkinter.CTkFrame):
         
         self.root.area_4.add_hazard_symbols(hazard_symbols)
     
+
     def clear_preview_key_details(self):
         """Clear any existing preview key details."""
         if self.root.preview_key_details.items():
             for widget in self.root.preview_key_details.values():
                 widget.destroy()
             self.root.preview_key_details = {}
+    
+    def add_details(self,table):
+        pass
 
     def create_table_columns(self, table, row, max_rows_per_column):
         table_columns_dict = self.controller.get_database_column_names(self.root.table_types[''.join(table)])
@@ -239,8 +245,8 @@ class PreviewFrame(customtkinter.CTkFrame):
             return True
         if key == "chemical_inventory" and column_lower not in ['date', 'volume']:
             return True
-        if key == "chemical_details" and column_lower not in ['chemical_name', 'volume', 'concentration']:
-            return True
+        # if key == "chemical_details" and column_lower not in ['chemical_name', 'volume', 'concentration']:
+        #     return True
         if key == "general_product" and self.controller.get_tab_info()[0] != "general_inventory" and "product" in column_lower:
             return True
         if key == "general_inventory" and column_lower not in ['product_name', 'fk_location_general_inventory', 'product_description']:
@@ -606,6 +612,9 @@ class DetailSelectFrame(customtkinter.CTkFrame):
             self.root.table_types[''.join(table)]
         )
         
+        self.details_checkboxes = {} # Use checkboxes to add/remove from preview
+        self.details_string_vars = {}
+
         #Current tab is accessible from controller class
         if table_columns_dict:
             self.controller.set_tab(''.join(table))
@@ -631,8 +640,9 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         self.add_address_entry(row,col,entry_count)
         self.add_to_db_checkbox(max_rows_per_column)
 
-    def initialize_tab_dropdown(self, table):
-        tab_names = [name if "details" not in name.lower() else "Chemical Details" for name in table]
+    def initialize_tab_dropdown(self, tables):
+        #tab_names = [name if "details" not in name.lower() else "Chemical Details" for name in tables]
+        tab_names = list(tables.keys())
 
         #self.selected_tab = customtkinter.StringVar(value=tab_names[0])
 
@@ -717,7 +727,7 @@ class DetailSelectFrame(customtkinter.CTkFrame):
             command=self.root.checkbox_changed  # Function to call when the state changes
         )
         self.db_insertion_checkbox.grid(row=rows+1, column=0, padx=10, pady=10, sticky="sw")
-    
+
     def add_key_details(self,table_col):
         max_rows_per_column = 9
         row = 1 
@@ -757,17 +767,45 @@ class DetailSelectFrame(customtkinter.CTkFrame):
                     # Increase row if set to 0
                     if row == 1: row += 1
                     # Create the label for the column
-                    label = customtkinter.CTkLabel(
-                        self, text=formatted_table_columns[j]
-                    )
+                    # show_on_preview_checkbox = customtkinter.CTkCheckBox(
+                    #     self,
+                    #     text="",  # Label for the checkbox
+                    #     #variable=self.add_to_db_var,  # Bind to the StringVar to track its state
+                    #     onvalue="on",  # The value when the checkbox is checked
+                    #     offvalue="off",  # The value when the checkbox is unchecked
+                    #     #command=self.root.checkbox_changed  # Function to call when the state changes
+                    # )
+                    # show_on_preview_checkbox.grid(row=row, column=col, padx=10, pady=5, sticky="ew")
+
+                    #var = tk.BooleanVar()
+                    var = customtkinter.StringVar(value="off")
+
+                    if 'qr' in column:
+                        label = customtkinter.CTkLabel(
+                            self, 
+                            text=formatted_table_columns[j], 
+                        )
+                    else:
+                        label = customtkinter.CTkCheckBox(
+                            self, 
+                            text=formatted_table_columns[j], 
+                            variable=var, 
+                            onvalue="on",  # The value when the checkbox is checked
+                            offvalue="off",  # The value when the checkbox is unchecked
+                            command=lambda:self.update_details_checkboxes()
+                        )
                     label.grid(row=row, column=col, padx=10, pady=5, sticky="ew")
                     # print(formatted_table_columns[j],f"Label Placed Row: {row} | Col: {col}")
                     if row == max_rows_per_column - 1:
-                        label.grid(row=row, column=col, padx=20, pady=5)
-                    
+                        label.grid(row=row, column=col, padx=10, pady=5)
+                    if isinstance(label, customtkinter.CTkCheckBox) and column not in self.details_checkboxes: # Prevent duplicates
+                        self.details_checkboxes[column] = label
+                        self.details_string_vars[column] = var
+
                     sv = customtkinter.StringVar()
 
-                    self.entry_strings[column] = (sv)
+                    if column not in self.entry_strings.keys():
+                        self.entry_strings[column] = (sv)
                     sv.trace("w", lambda *args, name=column, index=entry_count: self.update_key_details(name,index))
                     
 
@@ -787,7 +825,8 @@ class DetailSelectFrame(customtkinter.CTkFrame):
                         entry.grid(row=row, column=col + 1, padx=10, pady=5)
 
                     # Store the entry widget in a dictionary (self.entry_vars)
-                    self.entry_vars[column] = entry
+                    if column not in self.entry_vars.keys():
+                        self.entry_vars[column] = entry
 
                     row += 1
                     entry_count += 1
@@ -826,15 +865,23 @@ class DetailSelectFrame(customtkinter.CTkFrame):
                 continue
             formatted_table_columns[j] = self.process_columns(column)
             
+            var = customtkinter.StringVar(value="off")
             # Create the label for the column
-            label = customtkinter.CTkLabel(
-                self, text=formatted_table_columns[j]
+            label = customtkinter.CTkCheckBox(
+                self, 
+                text=formatted_table_columns[j], 
+                variable=var, 
+                onvalue="on",  # The value when the checkbox is checked
+                offvalue="off",  # The value when the checkbox is unchecked
+                command=lambda:self.update_details_checkboxes()
             )
             label.grid(row=row, column=col, padx=10, pady=5, sticky="ew")
             #print(formatted_table_columns[j],f"Label Placed Row: {row} | Col: {col}")
             if row == max_rows_per_column - 1:
                 label.grid(row=row, column=col, padx=20, pady=5)
-            
+            if isinstance(label, customtkinter.CTkCheckBox) and column not in self.details_checkboxes: # Prevent duplicates
+                self.details_checkboxes[column] = label
+                self.details_string_vars[column] = var
             sv = customtkinter.StringVar()
 
             self.entry_strings[column] = (sv)
@@ -926,8 +973,42 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         #Load StringVar object
         entry_name = name
         self.update_entries(True)
-
+        self.update_details_checkboxes()
         
+    def update_details_checkboxes(self):
+        checked = []
+        for key, val in self.details_string_vars.items():
+            if val.get() == "on":
+                if key in self.details_checkboxes:
+                    checked.append(key)
+       
+        #print(checked)
+        preview = self.root.area_4
+        details_textbox = preview.details_preview_textbox
+        text = ""
+        num_items = 0
+        for item in checked:
+            if item in self.entry_strings:
+                entry_name = item.replace("_"," ").title()
+                entry_value = self.entry_strings[item].get()
+                text += f"{entry_name}: {entry_value}\n"
+                num_items += 1
+
+        if num_items >= 2:
+            self.font_size = 13 - (num_items // 2) - 2  # Reduce font size for every 2 selections
+            if self.font_size < 6:  # Minimum font size
+                self.font_size = 6
+            preview.details_preview_font_size = self.font_size
+            details_textbox.cget("font").configure(size=preview.details_preview_font_size)
+            details_textbox.configure(font=details_textbox.cget("font"))
+            #preview.adjust_font_size(preview.details_preview_textbox)
+        else:
+            preview.details_preview_font_size = 13
+            details_textbox.cget("font").configure(size=preview.details_preview_font_size)
+            details_textbox.configure(font=details_textbox.cget("font"))
+        
+        preview.details_preview_textbox.delete("1.0", tk.END)  # Clear the existing text
+        preview.details_preview_textbox.insert(tk.END, text)  # Insert the updated text
     
     def update_entries(self,send_message):
         str_var = self.entry_strings
@@ -949,11 +1030,14 @@ class DetailSelectFrame(customtkinter.CTkFrame):
                         data_set = self.controller.set_data_entries(unformatted_column_name,str_var[key].get(),tab_names)
                         if "qr" in unformatted_column_name:
                             self.controller.set_qr_code_entry(str_var[key].get())
-                        if not data_set: data_entered = False
                         else: data_entered = True
+                
+            
+            data_entered = self.check_for_empty(data_set)
+
             if send_message:
-                if data_entered: self.root.data_process_message(f"Updated Entries Successfully")
-                else: self.root.data_warning_message("No values inserted")
+                if not data_entered[0]: self.root.data_process_message(f"Updated Entries Successfully")
+                else: self.root.data_warning_message(f"No values inserted for {data_entered[1]}")
             #print(self.controller.get_data_entries())
             
         except KeyError as e:
@@ -961,6 +1045,15 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         except Exception as e:
             self.root.data_error_message(f"Failed to Update Entries: An error occurred: \n\n{e}")
     
+    def check_for_empty(self,set):
+        for key in set.keys():
+            if set[key]:
+                all_none = all(value is None for value in set[key].values())
+                if all_none:
+                    print(f"No entries for {key} table")
+                    return (True,key)
+        return (False, None)
+
     # Ex: chemical_inventory -> Chemical Inventory
     def format_names(self, names):
         if type(names) is list:

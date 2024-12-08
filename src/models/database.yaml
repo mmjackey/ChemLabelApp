@@ -1,7 +1,7 @@
 INVENTORY_TYPES:
   "Chemical Inventory":
+    - "chemical_details"
     - "chemical_inventory"
-    - "general_product"
   "General Inventory":
     - "general_inventory"
     - "general_product"
@@ -13,6 +13,4 @@ INVENTORY_TYPES:
     - "functionalization"
     - "quality_control"
     - "shipping"
-  "Chemical Details":
-    - "chemical_details"
 

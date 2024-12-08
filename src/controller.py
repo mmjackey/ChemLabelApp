@@ -103,13 +103,6 @@ class Controller:
 
             # After processing the current table, store the entries in temp_dict
             temp_dict[table_name] = area_1_entries_for_table
-
-        for key in temp_dict.keys():
-            if temp_dict[key]:
-                all_none = all(value is None for value in temp_dict[key].values())
-                if all_none:
-                    #print(f"{key} is empty")
-                    return None
         
         #After all tables are processed, store the complete dictionary in self.table_entries
         self.table_entries = temp_dict
@@ -264,9 +257,13 @@ class Controller:
                     conversion = self.entry_parser.convert_to_types(user_entries[table],expected)
                     if isinstance(conversion, dict):
                         # update table_entries with converted version
-                        print(conversion)
+                        self.table_entries[table] = conversion
                         #self.table_entries
-                    elif conversion: self.view.data_error_message(conversion)
+                    elif conversion: 
+                        self.view.data_error_message(conversion)
+                        break
+
+                    print(self.get_data_entries())
             else:
                 self.view.data_warning_message("No values inserted in (Press Enter)")
                 self.db_insertion = False

@@ -15,7 +15,7 @@ class Database:
         self.conn = psycopg2.connect(
             database="inventory_management",
             user="postgres",
-            host="192.168.68.73",
+            host="100.91.167.126",
             password="team3#",
             port=5432,
         )

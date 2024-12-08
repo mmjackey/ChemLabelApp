@@ -46,7 +46,7 @@ class MyApp2(customtkinter.CTk):
             "chemical_inventory": [key for key in self.table_types if "chemical inventory" in key.lower()],
             "general_inventory": [key for key in self.table_types if "general" in key.lower()],
             "product": [key for key in self.table_types if "product" in key.lower()],
-            "chem_details": [key for key in self.table_types if "details" in key.lower()]
+            #"chem_details": [key for key in self.table_types if "details" in key.lower()]
         }
 
         #Sensitive - Move somewhere else
@@ -62,7 +62,7 @@ class MyApp2(customtkinter.CTk):
 
 
         #Get latest id from chosen inventory type
-        self.inventory_type = ''.join(self.table_keys["chem_details"]).lower()
+        self.inventory_type = ''.join(self.table_keys["chemical_inventory"]).lower()
 
         
         # tab_name = self.inventory_type.replace(" ","_")
@@ -135,7 +135,7 @@ class MyApp2(customtkinter.CTk):
         for i, name in enumerate(table):
             topbar_button = customtkinter.CTkButton(
                 self.topbar_frame,
-                text="Chemical Details" if "details" in name.lower() else name,
+                text="Chemical Inventory" if "details" in name.lower() else name,
                 command=lambda name=name: self.switch_tab(name),
                 fg_color="transparent",
                 border_width=0,
@@ -166,7 +166,7 @@ class MyApp2(customtkinter.CTk):
         #self.window_frame.grid_rowconfigure(0, weight=0)
 
         # Key Chemical Details
-        self.area_1 = DetailSelectFrame(self.window_frame,self.controller,self.table_keys["chem_details"],self)
+        self.area_1 = DetailSelectFrame(self.window_frame,self.controller,self.table_keys["chemical_inventory"],self)
         self.area_1.configure(corner_radius=10)
         self.area_1.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
         #self.initialize_tab_dropdown(self.table_types)
@@ -211,7 +211,7 @@ class MyApp2(customtkinter.CTk):
         inventory_map = {
         "chemical inventory": "Chemical Inventory",
         "general inventory": "General Inventory",
-        "chemical details": "Chemical Details",
+        #"chemical details": "Chemical Details",
         "batch inventory": "Batch Inventory",
         "product": "Product Inventory (Batch Process)"
         }
@@ -238,7 +238,7 @@ class MyApp2(customtkinter.CTk):
         #self.area_5.grid_forget()
 
         # Apply layout for the selected area
-        if area_to_show == "Chemical Inventory" or area_to_show == "Chemical Details":
+        if area_to_show == "Chemical Inventory": #or area_to_show == "Chemical Details":
             self.area_2.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
             self.area_3.grid(row=3, column=0, sticky="nsew", padx=10, pady=10)
             #self.area_5.grid(row=2, column=1, columnspan=2, sticky="nsew", padx=10, pady=10)
@@ -248,7 +248,7 @@ class MyApp2(customtkinter.CTk):
         area_mappings = {
             "Chemical Inventory": self.table_keys["chemical_inventory"],
             "General Inventory": self.table_keys["general_inventory"],
-            "Chemical Details": self.table_keys["chem_details"],
+            #"Chemical Details": self.table_keys["chem_details"],
             "Product Inventory": self.table_keys["product"]
         }
 
