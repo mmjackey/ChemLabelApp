@@ -261,50 +261,32 @@ class Controller:
                         #self.table_entries
                     elif conversion: 
                         self.view.data_error_message(conversion)
-                        break
+                        return None
                     
-                    # Table entries dictionary now has correct types 
-                    # Pass this directly to SQL query for db insertion
-                    print(self.get_data_entries())
+                # Table entries dictionary now has correct types 
+                # Pass this directly to SQL query for db insertion
+                data_entries = self.get_data_entries()
+
+                print("Add to database (Active): ")
+                for outer_key, inner_dict in data_entries.items():
+                    print(f"{outer_key}:")
+                    for inner_key, value in inner_dict.items():
+                        print(f"  - {inner_key}: {value}")
             else:
                 self.view.data_warning_message("No values inserted in (Press Enter)")
                 self.db_insertion = False
                 self.view.area_1.add_to_db_var.set(value="off")
 
 
-    def add_to_database(self, table, details):
-        stop_early = False
-        table_def = table.replace("_", " ").title()
-        if "batch" in table_def.lower():
-            table_def = "Product Inventory (Batch Process)"
-        table_columns_dict = self.get_database_column_names(
-            self.get_item_type_tables()[table_def]
-        )
-        user_entries = details
-        db_columns = table_columns_dict
-        normalized_entries = {}
-
-        for table in db_columns:
-            # print(f"Insert into {table}")
-            if "batch" in table.lower():
-                stop_early = True
-            for key, value in user_entries.items():
-                normalized_key = key.replace(
-                    " ", "_"
-                ).lower()  # Convert spaces to underscores and make lowercase
-
-                if normalized_key in db_columns[table]:
-                    normalized_entries[normalized_key] = value
-
-            valid_entries = normalized_entries
-            if valid_entries:  # Only insert if there are valid entries
-                valid_entries = self.assort_columns(table, valid_entries)
-                print(valid_entries)
-                self.database.insert_data_into_db(table, valid_entries)
-            else:
-                print(f"No valid entries to insert ({table})")
-            if stop_early: break
+    def add_to_database(self, table, user_entries):
+        if user_entries:
+            user_entries = self.assort_columns(table, user_entries)
+            print(f"Attempting to add user_entries to {table}..")
+            self.database.insert_data_into_db(table, user_entries) # Important - Passes user entries to PostgreSQL
+        else:
+            print(f"No valid entries to insert ({table})")
     
+
     def next_id(self,tab_name):
         new_id = self.database.get_latest_barcode_id(tab_name)
         if new_id is None:
@@ -323,172 +305,71 @@ class Controller:
             return None
 
 
-    def on_submission(self):
-        item_frame_container = self.view.item_frame_container
+    # def on_submission(self):
+    #     item_frame_container = self.view.item_frame_container
 
-        selected_type = item_frame_container.item_type_var.get()
+    #     selected_type = item_frame_container.item_type_var.get()
 
-        selected_frame = item_frame_container.item_type_frames[selected_type]
+    #     selected_frame = item_frame_container.item_type_frames[selected_type]
 
-        table_names = selected_frame.table_names
-        table_cols_dict = self.get_database_column_names(table_names)
+    #     table_names = selected_frame.table_names
+    #     table_cols_dict = self.get_database_column_names(table_names)
 
-        # 1) Query IDs for the selected item and generate one that is 1 higher
-        # 2) Somehow generate a dynamic query that inserts however many parameters
-        # you have into the correct database tables
-        # 3) take that information and generate the PDF and store it
+    #     # 1) Query IDs for the selected item and generate one that is 1 higher
+    #     # 2) Somehow generate a dynamic query that inserts however many parameters
+    #     # you have into the correct database tables
+    #     # 3) take that information and generate the PDF and store it
 
-        # if the tickbox on the corresponding frame is ticked, then do database things
-        # if its not then don't
-        if selected_frame.checkbox_var.get():
-            print("would submit to the database")
+    #     # if the tickbox on the corresponding frame is ticked, then do database things
+    #     # if its not then don't
+    #     if selected_frame.checkbox_var.get():
+    #         print("would submit to the database")
 
-        # maybe gather the data here but you should do the actual query in database
-        for table in table_cols_dict.values():
-            for col in table:
-                print(col)
-                if "id" in col.lower() or "hazard" in col.lower():
-                    continue
-                print(selected_frame.entry_vars[col].get())
+    #     # maybe gather the data here but you should do the actual query in database
+    #     for table in table_cols_dict.values():
+    #         for col in table:
+    #             print(col)
+    #             if "id" in col.lower() or "hazard" in col.lower():
+    #                 continue
+    #             print(selected_frame.entry_vars[col].get())
 
-            #
-            selected_hazards = self.get_selected_hazards()
-            selected_precautions = self.get_selected_precautions()
+    #         #
+    #         selected_hazards = self.get_selected_hazards()
+    #         selected_precautions = self.get_selected_precautions()
 
-        self.pdf_generator.generate_pdf(
-            details, selected_hazards, selected_precautions
-        )
+    #     self.pdf_generator.generate_pdf(
+    #         details, selected_hazards, selected_precautions
+    #     )
 
-        self.view.display_success("PDF generated successfully!")
+    #     self.view.display_success("PDF generated successfully!")
+
+    def add_id(self,entries):
+        for table in entries:
+            for item in entries[table].keys():
+                if 'id' in item:
+                    entries[table][item] = self.get_new_barcode()
+        return entries
 
     def on_submission2(self):
 
         cur_tab = self.get_tab_info()[0]
-        details1 = self.area_1_entries
 
-        # Details from tab
-        selected_details = {}
-        selected_details2 = {}
-        selected_details3 = {}
-        selected_details4 = {}
-        if cur_tab == "chemical_details":
-            selected_data = [
-                "chemical_name",
-                "volume",
-                "concentration",
-                "qr_code",
-            ]
-            for key in details1.keys():
-                if key.lower().replace(" ", "_") in [
-                    x.lower() for x in selected_data
-                ]:
-                    key_index = key.lower()
-                    if "qr" in key.lower():
-                        key_index = "qr_code"
-                    selected_details[key_index] = details1[key]
-                selected_details2[key_index] = details1[key]
-        if cur_tab == "batch_inventory":
-            selected_data = [
-                "start_vol",
-                "current_volume",
-                "production",
-                "qr_code",
-            ]
-            for key in details1.keys():
-                if key.lower().replace(" ", "_") in [
-                    x.lower() for x in selected_data
-                ]:
-                    key_index = key.lower()
-                    if "qr" in key.lower():
-                        key_index = "qr_code"
-                    selected_details[key_index] = details1[key]
-                selected_details2[key_index] = details1[key]
-        if cur_tab == "general_inventory":
-            selected_data1 = ["quantity", "location", "production", "qr_code"]
-            selected_data2 = [
-                "product_name",
-                "product_description",
-                "vendor_sku",
-                "hazard_details",
-                "model_number",
-                "vendor_name",
-                "category",
-                "image_url",
-                "order_url",
-            ]
-            for key in details1.keys():
-                if key.lower().replace(" ", "_") in [
-                    x.lower() for x in selected_data1
-                ]:
-                    key_index = key.lower()
-                    if "qr" in key.lower():
-                        key_index = "qr_code"
-                    selected_details[key_index] = details1[key]
-                selected_details2[key_index] = details1[key]
-                if key.lower().replace(" ", "_") in [
-                    x.lower() for x in selected_data2
-                ]:
-                    key_index = key.lower()
-                    if "qr" in key.lower():
-                        key_index = "qr_code"
-                    selected_details3[key_index] = details1[key]
-                selected_details4[key_index] = details1[key]
-
-        #Create new barcode id
-        fetched_id = self.next_id(self.get_tab_info()[0])
-
-        if fetched_id:
-            details2 = self.next_id_str()
-            self.set_new_barcode(details2)
-        else: print("Submission Error - Failed to fetch product id")
-
-        # QR Code
-        details3 = self.get_qr_code_entry()
-
-        # Page Size
-        details4 = "Landscape"  # self.get_page_size()
-
-        selected_details["barcode_input"] = details2
-        selected_details["qr_code_input"] = details3
-        selected_details["page_size"] = details4
-
-        selected_details2 = self.fix_columns(self.get_data_entries(), cur_tab)
-
-        if self.converted_entries:
-            self.converted_entries["id"] = details2
-        selected_details2["id"] = details2
-
+        entries = self.get_data_entries()
+        entries = self.add_id(entries) #Add ID to tables
+        
+        
         # Hazards and Precautions
-        if cur_tab != "general_inventory":
+        if "general" not in cur_tab:
             selected_hazards = self.get_selected_hazards()
             selected_precautions = self.get_selected_precautions()
 
         if self.db_insertion:
-            if self.converted_entries:
-                expected = self.entry_parser.convert_value_types(
-                    self.converted_entries, cur_tab
-                )
-                conversion = self.entry_parser.convert_to_types(
-                    self.converted_entries, expected_types=expected
-                )
-            else:
-                expected = self.entry_parser.convert_value_types(
-                    selected_details2, cur_tab
-                )
-                conversion = self.entry_parser.convert_to_types(
-                    selected_details2, expected_types=expected
-                )
-            if isinstance(conversion, dict):
-                print(conversion)
-                self.add_to_database(
-                    self.get_tab_info()[0], self.converted_entries
-                )
-                for name, i in conversion.items():
-                    # print(f"{name} : {type(i)}")
-                    pass
-            elif conversion:
-                self.view.data_error_message(conversion)
-                self.db_insertion = False
+            for key in entries:
+                
+                self.add_to_database(key, entries[key])
+                
+                #self.view.data_error_message(conversion)
+                #self.db_insertion = False
 
     def get_database_column_names(self, table):
         return self.database.fetch_column_names(table)

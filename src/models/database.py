@@ -326,25 +326,17 @@ class Database:
 
     def insert_data_into_db(self, table, valid_entries):
         columns = ", ".join(valid_entries.keys())
-        values_placeholders = ", ".join(["%s"] * len(valid_entries))
-        sql_query = f"""
-            INSERT INTO {table} ({columns})
-            VALUES ({values_placeholders})
-            RETURNING *;
-        """
-
-        values_to_insert = tuple(valid_entries.values())
-        # values_to_insert = tuple(str(value) if value is not None else 'NULL' for value in values_to_insert)
+        values_to_insert = tuple(str(value) if value is not None else None for value in valid_entries.values())
+        placeholders = ', '.join(['%s'] * len(values_to_insert))
         try:
-            print(values_to_insert)
             sql_query2 = f"""
                 INSERT INTO {table} ({columns})
-                VALUES ({values_to_insert})
+                VALUES ({placeholders})
                 RETURNING *;
             """
 
             # self.cur.execute(sql_query, values_to_insert)
-            self.cur.execute(sql_query2)
+            self.cur.execute(sql_query2,values_to_insert)
 
             inserted_row = self.cur.fetchone()
 

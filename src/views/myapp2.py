@@ -274,6 +274,20 @@ class MyApp2(customtkinter.CTk):
         self.controller.on_submission2()
 
         #messagebox.showinfo("", "Label generated successfully")
+        self.update_barcode_qr()
+        
+        # Create png, convert to pdf
+        self.capture_widget_as_image(self.area_4.preview_label_frame, "frame_capture.png")
+        self.create_pdf("frame_capture.png", "label_output.pdf")
+        self.data_process_message("PDF created successfully!")
+
+        #Refresh Entry boxes
+        for box in self.area_1.entry_vars.values():
+            box.delete(0, tk.END)
+        
+        self.area_4.update_frame("Landscape")
+
+    def update_barcode_qr(self):
         #Create new barcode
         self.generate_barcode(self.controller.get_new_barcode())
         self.area_4.barcode_photo_prev.configure(dark_image=Image.open(self.controller.get_barcode_image()))
@@ -288,27 +302,7 @@ class MyApp2(customtkinter.CTk):
         self.area_4.barcode_label_prev.grid(row=0, column=1, padx=0, sticky="w")
         self.area_4.qr_code_label.grid(row=0, column=2,padx=(0,5),sticky="e")
         #self.qr_code_label.grid(padx=(0,15))
-        
-        
-        self.capture_widget_as_image(self.area_4.preview_label_frame, "frame_capture.png")
-        self.create_pdf("frame_capture.png", "label_output.pdf")
-        
-        #Refresh Entry boxes
-        for box in self.area_1.entry_vars.values():
-            box.delete(0, tk.END)
-        
-        print("PDF created successfully!")
-        
-        tab_name = self.inventory_type.replace(" ","_")
-        fetched_id = self.controller.next_id_str(self.controller.next_id(self.inventory_type))
 
-        self.controller.set_id_info(tab_name,fetched_id)
-        self.controller.set_new_barcode(self.controller.get_id_info()[tab_name])
-
-        self.generate_barcode(self.controller.get_new_barcode())
-        self.area_4.update_frame("Landscape")
-
-    
     def generate_barcode(self,input_string):
         try:
             file_name = "barcode"
