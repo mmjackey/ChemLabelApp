@@ -262,7 +262,9 @@ class Controller:
                     elif conversion: 
                         self.view.data_error_message(conversion)
                         break
-
+                    
+                    # Table entries dictionary now has correct types 
+                    # Pass this directly to SQL query for db insertion
                     print(self.get_data_entries())
             else:
                 self.view.data_warning_message("No values inserted in (Press Enter)")
