@@ -1,4 +1,5 @@
 from controller import Controller
+from entry_parser import EntryParser
 from models.database import Database
 #from models.database2 import Database
 from models.hazard_data import HazardsPrecautionData
