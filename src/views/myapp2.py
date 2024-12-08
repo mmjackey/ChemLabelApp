@@ -24,6 +24,8 @@ class MyApp2(customtkinter.CTk):
         self.controller = controller
         self.controller.set_view(self)
 
+        self.title("SoFab Inks Inventory Management")
+
         item_type_tables = self.controller.get_item_type_tables()
         self.table_types = item_type_tables
 
