@@ -20,12 +20,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.pdfgen import canvas
 
-from views.warning_print_frame import WarningPrintFrame
-from views.warning_select_frame import WarningSelectFrame
-from views.warning_select_frame import HazardSymbolFrame
-from views.details_selection_frame import DetailSelectFrame
-from views.hazardprecautionframe2 import HazardPrecautionFrame2
-from views.preview_frame import PreviewFrame
+from views.widgets import *
 
 
 # from ttkbootstrap import Style
@@ -44,9 +39,9 @@ class MyApp2(customtkinter.CTk):
         self.controller.set_view(self)
 
 
-        item_type_tables = self.controller.get_item_type_tables()
-        self.table_types = item_type_tables
+        self.table_types = self.controller.get_item_type_tables()
 
+        
         self.table_keys = {
             "chemical_inventory": [key for key in self.table_types if "chemical inventory" in key.lower()],
             "general_inventory": [key for key in self.table_types if "general" in key.lower()],
@@ -59,13 +54,22 @@ class MyApp2(customtkinter.CTk):
     
         self.area_1_frames = []
 
-        self.tab_buttons = []
+        self.tab_buttons = {}
+
         self.preview_key_details = {}
+
+        self.selected_inventory_type = ""
+
 
         #Get latest id from chosen inventory type
         self.inventory_type = ''.join(self.table_keys["chem_details"]).lower()
-        self.controller.set_id_info(self.inventory_type.replace(" ","_"),self.controller.next_id(self.controller.database.get_latest_barcode_id(self.inventory_type)))
-        self.controller.set_new_barcode(self.controller.get_id_info()[self.inventory_type.replace(" ","_")])
+
+        
+        # tab_name = self.inventory_type.replace(" ","_")
+        # fetched_id = self.controller.next_id_str(self.controller.next_id(self.inventory_type))
+
+        # self.controller.set_id_info(tab_name,fetched_id)
+        # self.controller.set_new_barcode(self.controller.get_id_info()[tab_name])
 
         # Topbar - Chemical/General/Details Inventory and Submit
         self.setup_menu()
@@ -99,6 +103,7 @@ class MyApp2(customtkinter.CTk):
         for col in range(2):  # Columns 0 and 1 with weight=1
             self.grid_columnconfigure(col, weight=1)
     
+    
     def setup_menu(self):
         self.topbar_frame = customtkinter.CTkFrame(
             self, height=60, corner_radius=0
@@ -108,10 +113,10 @@ class MyApp2(customtkinter.CTk):
         #Topbar - SoFab Logo!
         self.logo_photo = customtkinter.CTkImage(dark_image=Image.open(AppConfig.SOFAB_LOGO), size=(160,40))
         self.logo_label = customtkinter.CTkLabel(self.topbar_frame, image=self.logo_photo, text="")  # Empty text for the image
-        self.logo_label.grid(row=0, column=0, padx=10, pady=10)
+        self.logo_label.grid(row=0, column=0, padx=10, pady=15)
     
-        #Topbar - Menu buttons
-        last_column = self.initialize_tab_buttons(self.table_types)
+        #Topbar - Menu buttons - Removed
+        #last_column = self.initialize_tab_buttons(self.table_types)
 
         #Topbar - Submit
         self.submit_button = customtkinter.CTkButton(
@@ -120,30 +125,29 @@ class MyApp2(customtkinter.CTk):
             command=lambda: self.on_submit(),
             fg_color="transparent",
             border_width=0,
+            font=customtkinter.CTkFont(size=14,weight="bold"),
         )
-        self.submit_button.grid(row=0, column=last_column+1, padx=10, pady=10)
+        self.submit_button.grid(row=0, column=1, padx=10, sticky="ns")
     
     #Chemical Inventory, General Inventory, Batch Inventory, Chemical Details, Submit
     def initialize_tab_buttons(self,table):
         tab_column_index = 1
         for i, name in enumerate(table):
-            # Hide batch inventory
-            # if "product" in name.lower():
-            #     continue
             topbar_button = customtkinter.CTkButton(
                 self.topbar_frame,
                 text="Chemical Details" if "details" in name.lower() else name,
-                command=lambda name=name: self.sidebar_button_event(name),
+                command=lambda name=name: self.switch_tab(name),
                 fg_color="transparent",
                 border_width=0,
             )
-            topbar_button.grid(row=0, column=1+tab_column_index, padx=10, pady=10)
-            self.tab_buttons.append(topbar_button)
+            topbar_button.grid(row=0, column=1+tab_column_index, padx=10, pady=20)
+            self.tab_buttons[name] = topbar_button
             tab_column_index += 1
         return tab_column_index
+    
 
     def load_default_areas(self):
-
+        
         # Load warning dictionaries
         hazard_warnings = self.controller.get_hazard_classes_dict()
         precaution_warnings = self.controller.get_precaution_classes_dict()
@@ -152,13 +156,20 @@ class MyApp2(customtkinter.CTk):
         self.stored_diamonds = []
 
         # Contains print textbox to display selected warning items
-        self.area_5 = WarningPrintFrame(self.window_frame, self.controller)
-        self.area_5.grid(row=2, column=1, columnspan=2, sticky="nsew", padx=10, pady=10)
+        #self.area_5 = WarningPrintFrame(self.window_frame, self.controller)
+        #self.area_5.grid(row=2, column=1, columnspan=2, sticky="nsew", padx=10, pady=10)
+
+        # Choose inventory type
+        #self.area_0 = customtkinter.CTkFrame(self.window_frame,height=20)
+        #self.area_0.place(x=10, y=10, relwidth=0.6)
+        #self.area_0.grid(row=1, column=0,sticky="ew", padx=10, pady=10)
+        #self.window_frame.grid_rowconfigure(0, weight=0)
 
         # Key Chemical Details
         self.area_1 = DetailSelectFrame(self.window_frame,self.controller,self.table_keys["chem_details"],self)
         self.area_1.configure(corner_radius=10)
         self.area_1.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
+        #self.initialize_tab_dropdown(self.table_types)
 
         # Contains hazards and precautions
         self.area_2 = WarningSelectFrame(self.window_frame, self.controller, hazard_warnings, precaution_warnings, root=self)
@@ -166,7 +177,7 @@ class MyApp2(customtkinter.CTk):
         self.area_2.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
 
         # Create hazard symbols frame
-        self.area_3 = HazardSymbolFrame(self.window_frame,self.controller, hazard_diamonds, hazard_print=self.area_5.text_box, root=self)
+        self.area_3 = HazardSymbolFrame(self.window_frame,self.controller, hazard_diamonds, root=self)
         self.area_3.configure(corner_radius=10)
         self.area_3.grid(row=3, column=0, sticky="nsew", padx=10, pady=10)
 
@@ -174,7 +185,7 @@ class MyApp2(customtkinter.CTk):
         # Contains Preview box and orientation selection
         self.area_4 = PreviewFrame(self.window_frame, self.controller, root=self)
         self.area_4.configure(corner_radius=10)
-        self.area_4.grid(row=1, column=1, columnspan=2, sticky="nsew", padx=10, pady=10)
+        self.area_4.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
     
     # Creates general info labels
     def label_tables(self, key, i):
@@ -195,7 +206,7 @@ class MyApp2(customtkinter.CTk):
             return names.replace("_", " ").title()
 
     # Switch between Chemical/General Inventory
-    def sidebar_button_event(self, button_name):
+    def switch_tab(self, button_name):
         #Refresh areas - Keep preview visible
         inventory_map = {
         "chemical inventory": "Chemical Inventory",
@@ -205,32 +216,32 @@ class MyApp2(customtkinter.CTk):
         "product": "Product Inventory (Batch Process)"
         }
 
-        # Normalize button_name to lower case to avoid redundant case sensitivity checks
         button_name_lower = button_name.lower()
 
-        # Check if the button_name corresponds to any of the keys in the mapping
         for key, value in inventory_map.items():
             if key in button_name_lower:
                 self.inventory_type = value.lower()
-                self.update_area_layout(value)  # Update layout for selected inventory type
-                self.create_area_frame(value)   # Create the corresponding area frame
+                self.update_area_layout(value)
+                self.create_area_frame(value)
+                self.controller.clear_data_entries()
+                self.area_4.switch_preview_box()
                 break
         
         #Refresh preview label
-        self.area_4.switch_preview_box()
+        
         
         
     def update_area_layout(self, area_to_show):
         # Reset all areas
         self.area_2.grid_forget()
         self.area_3.grid_forget()
-        self.area_5.grid_forget()
+        #self.area_5.grid_forget()
 
         # Apply layout for the selected area
         if area_to_show == "Chemical Inventory" or area_to_show == "Chemical Details":
             self.area_2.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
             self.area_3.grid(row=3, column=0, sticky="nsew", padx=10, pady=10)
-            self.area_5.grid(row=2, column=1, columnspan=2, sticky="nsew", padx=10, pady=10)
+            #self.area_5.grid(row=2, column=1, columnspan=2, sticky="nsew", padx=10, pady=10)
 
     def create_area_frame(self, inventory_type):
         # Mapping between inventory type and corresponding table key
@@ -246,21 +257,19 @@ class MyApp2(customtkinter.CTk):
                 self.area_1 = DetailSelectFrame(self.window_frame, self.controller, value[0], self)
                 self.area_1.configure(corner_radius=10)
                 self.area_1.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
-                
                 break
 
     #When add to database is toggled
     def checkbox_changed(self):
         if self.area_1.add_to_db_var.get() == "on":
+            #Force entry check
+            self.area_1.update_entries(False)
             self.controller.set_db_insertion(True)
+            
         else:
             self.controller.set_db_insertion(False)
 
-    #Not quite there yet
     def on_submit(self):
-        # for entry_field in self.entry_vars.keys():
-        #     #print(f"{entry_field}: {self.entry_vars[entry_field].get()}")
-        #     entry = self.entry_vars[entry_field].get()
 
         self.controller.on_submission2()
 
@@ -289,8 +298,13 @@ class MyApp2(customtkinter.CTk):
             box.delete(0, tk.END)
         
         print("PDF created successfully!")
-        self.controller.set_id_info(self.inventory_type.replace(" ","_"),self.controller.next_id(self.controller.database.get_latest_barcode_id(self.inventory_type)))
-        self.controller.set_new_barcode(self.controller.get_id_info()[self.inventory_type.replace(" ","_")])
+        
+        tab_name = self.inventory_type.replace(" ","_")
+        fetched_id = self.controller.next_id_str(self.controller.next_id(self.inventory_type))
+
+        self.controller.set_id_info(tab_name,fetched_id)
+        self.controller.set_new_barcode(self.controller.get_id_info()[tab_name])
+
         self.generate_barcode(self.controller.get_new_barcode())
         self.area_4.update_frame("Landscape")
 
@@ -356,19 +370,16 @@ class MyApp2(customtkinter.CTk):
     #Delete later
     def update_printbox(self):
         pass
-
-    def update_preview_box(self,args):
-        text=args[0]
-        hazard_symbols=args[1]
-        self.area_4.hazards_preview_textbox.delete("1.0", tk.END)  # Clear the existing text
-        self.area_4.hazards_preview_textbox.insert(tk.END, text)  # Insert the updated text
-        self.stored_preview_text = text
-        
-        self.area_4.add_hazard_symbols(hazard_symbols)
     
     def data_error_message(self,err):
         CTkMessagebox(title="Error", message=err, icon="cancel")
         self.area_1.add_to_db_var.set(value="off")
+    
+    def data_process_message(self,mess):
+        CTkMessagebox(title="Confirmation", message=mess, icon="check")
+    
+    def data_warning_message(self,mess):
+        CTkMessagebox(title="Warning", message=mess, icon="warning")
                     
 # if __name__ == "__main__":
 # app = App()

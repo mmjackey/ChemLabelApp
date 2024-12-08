@@ -5,7 +5,7 @@ import psycopg2
 class Database:
     def __init__(self):
 
-        self.inventory_tables_data = "src\models\database.yaml"
+        self.inventory_tables_data = "src/models/database.yaml"
 
         with open(self.inventory_tables_data, 'r') as file:
             self.inventory_type_tables = yaml.safe_load(file)['INVENTORY_TYPES']
@@ -44,6 +44,22 @@ class Database:
 
         return column_names_dict
     
+    def fetch_columns_in_table(self,table_name):
+        try:
+            self.cur.execute(
+                """SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_name = %s;
+                """, (table_name,)
+                )
+                
+            columns = self.cur.fetchall()
+
+            return [column[0] for column in columns]
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return []
 
     def get_inventory_table_types(self):
         return self.inventory_type_tables
@@ -71,25 +87,77 @@ class Database:
         table_exists = self.cur.fetchone()[0]
         
         if table_exists:
+
+            # Is 'id' present in table?
             self.cur.execute(
-                f"""SELECT id
-                FROM {sanitized_table_type}
-                ORDER BY id DESC
-                LIMIT 1;"""
+                f"""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = %s AND column_name = 'id';
+                """, (sanitized_table_type,)
             )
-            
-            latest_id = self.cur.fetchone()
-            if latest_id:
-                print(f"Latest {sanitized_table_type} ID retrieved")
-                return latest_id[0]
+            column_exists = self.cur.fetchone()
+
+            # Is 'product_id' present in table? (General Inventory)
+            self.cur.execute(
+                f"""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = %s AND column_name = 'product_id';
+                """, (sanitized_table_type,)
+            )
+            other_column_exists = self.cur.fetchone()
+
+            if column_exists or other_column_exists:
+                
+                column_name = 'id' if column_exists else 'product_id'
+
+                # Fetch most recent 'id' value
+                self.cur.execute(
+                    f"""SELECT {column_name}
+                    FROM {sanitized_table_type}
+                    ORDER BY {column_name} DESC
+                    LIMIT 1;"""
+                )
+                
+                latest_id = self.cur.fetchone()
+                if latest_id:
+                    print(f"Latest {sanitized_table_type} ID retrieved: {latest_id[0]}\n")
+                    return latest_id[0]
+                else:
+                    print(f"No records found in {sanitized_table_type}\n")
+                    return None
             else:
-                print(f"No records found in {sanitized_table_type}")
-                return None
+                print(f"Column 'id' does not exist in table {sanitized_table_type}\n")
         else:
-            print(f"{sanitized_table_type} not found in database")
+            print(f"{sanitized_table_type} not found in database\n")
             return None
 
     
+    # Check if column name is in specified table
+    def column_in_table(self, column_name, table_name):
+        try:
+            query = ("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = %s AND column_name = %s;
+            """)
+
+            self.cur.execute(query, (table_name, column_name))
+            result = self.cur.fetchone()
+
+            if result:
+                #print(f"Column '{column_name}' exists in table '{table_name}'.")
+                return True
+            else:
+                #print(f"Column '{column_name}' does not exist in table '{table_name}'.")
+                return False
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return False
+
+
     def check_column_data_types(self, user_input_dict, table_name):
         try:
             

@@ -19,7 +19,7 @@ class EntryParser:
         if not user_entries: return
 
         for key, value in user_entries.items():
-            if value == "": continue
+            if not value or value == "": continue
             #print(f"Key:{key} and Value:{value} | Expected type: {expected_types.get(key)}")
             expected_type = expected_types.get(key)
             

@@ -6,7 +6,10 @@ class Controller:
         self.pdf_generator = PDFGenerator
         self.hazard_precautions_data = HazardsPrecautionsData
         self.entry_parser = EntryParser
+
+        self.table_entries = {}
         self.area_1_entries = {}
+        
         self.cur_tab = {}
         self.hazard_diamonds = self.hazard_precautions_data.HAZARD_DIAMONDS
         self.qr_code_entry = {}
@@ -67,15 +70,58 @@ class Controller:
         return self.get_selected_hazards() + self.get_selected_precautions() #+ self.get_diamond_vars()
 
     #Set chemical/general inventory entries 
-    def set_data_entries(self,key,value):
-        self.area_1_entries[key] = value
+    def set_data_entries(self, key, value, table_names):
+        # Initialize temp_dict to hold entries for all tables
+        temp_dict = {}
 
+        # Preprocess the value for empty input
+        value = None if value == '' or value == "" else value
+
+        # Loop through each table in table_names
+        for table_name in table_names:
+            # Fetch columns for the current table
+            columns = self.database.fetch_columns_in_table(table_name)
+            
+            # Create a dictionary for the current table's entries
+            area_1_entries_for_table = {}
+            
+            # Set the value for the key in area_1_entries before processing the columns
+            self.area_1_entries[key] = value
+
+            # Process each column in the current table
+            for column in columns:
+                # Set value for column based on the key
+                if column == key:
+                    area_1_entries_for_table[column] = value
+                else:
+                    # Preserve the existing value if it exists in area_1_entries
+                    area_1_entries_for_table[column] = self.area_1_entries.get(column, None)
+
+            # After processing the current table, store the entries in temp_dict
+            temp_dict[table_name] = area_1_entries_for_table
+
+        for key in temp_dict.keys():
+            if temp_dict[key]:
+                all_none = all(value is None for value in temp_dict[key].values())
+                if all_none:
+                    #print(f"{key} is empty")
+                    return None
+        
+        #After all tables are processed, store the complete dictionary in self.table_entries
+        self.table_entries = temp_dict
+        return self.table_entries
+
+
+    def check_column_exists(self,table,key,value):
+        return self.database.column_in_table(key,table)
 
     def clear_data_entries(self):
         self.area_1_entries = {}
+        self.table_entries = {}
     
     def get_data_entries(self):
-        return self.area_1_entries
+        return self.table_entries
+        #return self.area_1_entries
 
     def set_tab(self,table_name):
         self.cur_tab = self.get_item_type_tables()[table_name]
@@ -83,18 +129,19 @@ class Controller:
     def get_tab_info(self):
         return self.cur_tab
     
+    def get_tab_name(self):
+        if 'batch' in self.cur_tab[0]:
+            for key in self.get_item_type_tables():
+                if 'product' in key.lower():
+                    return key
+        return self.cur_tab[0].replace("_"," ").title()
+    
     def set_page_size(self,size):
         self.page_size = size
     
     def get_page_size(self):
         return self.page_size
     
-    #Get new barcode id
-    def next_id(self,id_str):
-        prefix = id_str[:2]  #Ex: 'BN'
-        number_str = id_str[2:]
-        new_number_str = f"{int(number_str) + 1:010d}"
-        return prefix + new_number_str
 
     def set_qr_code_entry(self,qr_code_str):
         self.qr_code_entry = qr_code_str
@@ -198,28 +245,23 @@ class Controller:
         return sorted_entries
 
     def set_db_insertion(self,bool):
-        #print("db_insertion set to: ", str(bool))
-        #Check entries
         self.db_insertion = bool
         if bool:
-            self.entry_parser
-            cur_table = self.get_tab_info()[0]
-            user_entries = self.fix_columns(self.get_data_entries(),cur_table)
-            user_entries = {key: value for key, value in user_entries.items() if value != ""}
-            expected = self.entry_parser.convert_value_types(user_entries,cur_table)
-
-            conversion = self.entry_parser.convert_to_types(user_entries,expected_types=expected)
-            if isinstance(conversion, dict):
-                for name,i in conversion.items():
-                    self.converted_entries = conversion
-                    #print(f"{name} : {type(i)}")
-                    pass
-            elif conversion:
-                #print(conversion)
-                self.view.data_error_message(conversion)
-
+            user_entries = self.get_data_entries()
+            if user_entries:
+                for table in user_entries.keys():
+                    expected = self.entry_parser.convert_value_types(user_entries[table],table)
+                    conversion = self.entry_parser.convert_to_types(user_entries[table],expected)
+                    if isinstance(conversion, dict):
+                        # update table_entries with converted version
+                        print(conversion)
+                        #self.table_entries
+                    elif conversion: self.view.data_error_message(conversion)
+            else:
+                self.view.data_warning_message("No values inserted in (Press Enter)")
                 self.db_insertion = False
-            #print(self.database.check_column_data_types(user_entries, cur_table))
+                self.view.area_1.add_to_db_var.set(value="off")
+
 
     def add_to_database(self,table,details):
         stop_early = False
@@ -249,9 +291,27 @@ class Controller:
                 print(valid_entries)
                 self.database.insert_data_into_db(table,valid_entries)
             else:
-                print("No valid entries to insert.")
+                print(f"No valid entries to insert ({table})")
             if stop_early: break
     
+    def next_id(self,tab_name):
+        new_id = self.database.get_latest_barcode_id(tab_name)
+        if new_id is None:
+            self.view.data_error_message("Failed to fetch product id")
+        return new_id
+    
+    #Get new barcode id
+    def next_id_str(self,id_str):
+        try:
+            prefix = id_str[:2]  #Ex: 'BN'
+            number_str = id_str[2:]
+            new_number_str = f"{int(number_str) + 1:010d}"
+            return prefix + new_number_str
+        except:
+            self.view.data_error_message("Failed to fetch product id")
+            return None
+
+
     def on_submission(self):
         item_frame_container = self.view.item_frame_container
 
@@ -336,8 +396,12 @@ class Controller:
                 selected_details4[key_index] = details1[key]
 
         #Create new barcode id
-        details2 = self.next_id(self.database.get_latest_barcode_id(self.get_tab_info()[0]))
-        self.set_new_barcode(details2)
+        fetched_id = self.next_id(self.get_tab_info()[0])
+
+        if fetched_id:
+            details2 = self.next_id_str()
+            self.set_new_barcode(details2)
+        else: print("Submission Error - Failed to fetch product id")
 
         #QR Code
         details3 = self.get_qr_code_entry()
