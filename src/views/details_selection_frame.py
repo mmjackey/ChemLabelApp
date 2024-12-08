@@ -60,10 +60,12 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         sv2 = customtkinter.StringVar()
 
         self.entry_strings.append(sv2)
+
+        # update_key_details(self, name, table, tab, sv):
         trace = sv2.trace_add(
             "write",
-            lambda *args, name="address", index=row: self.update_key_details(
-                name, index
+            lambda *args, name="address", table="additional", tab=self.parent.current_tab: self.update_key_details(
+                name, table, tab, sv2
             ),
         )
 
@@ -188,9 +190,12 @@ class DetailSelectFrame(customtkinter.CTkFrame):
             self.controller.set_qr_code_entry(sv.get())
 
         # Set preview text labels
-        self.parent.preview_key_details[name].configure(
-            text=str(f"{sv.get()}")
-        )
+        for k, v in self.parent.preview_key_details.items():
+            if k == name:
+                text = f"{k.replace('_', ' ').title()}"
+                self.parent.preview_key_details[name].configure(
+                    text=str(f"{text}: {sv.get()}")
+                )
         #            if key.lower() == "address":
         #                if not self.controller.get_data_entries()[entry]:
         #                    self.parent.preview_key_details[key].configure(
