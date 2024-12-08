@@ -204,36 +204,38 @@ class Controller:
         # Check entries
         self.db_insertion = value
 
-    def add_to_database(self, tab):
+    def add_to_database(self, tab, id):
         tables = self.retrieve_tab_entries(tab)
         for table, columns in tables.items():
+            types = self.database.get_column_types(table)
             columns_list = []
             entries = []
             if "additional" in table:
+                entries
                 continue
             for column, entry in columns.items():
                 columns_list.append(column)
                 if "id" in column:
-                    entries.append("'CD0000000000'")
+                    entries.append(f"'{id}'")
                     continue
-                print(entry.get())
-                if entry.get() is None or entry.get() == "":
+                elif "hazard" in column:
+                    entries.append("NULL")
+                    continue
+                elif entry.get() is None or entry.get() == "":
                     entries.append("NULL")
                 else:
                     entries.append(f"'{entry.get()}'")
 
             self.database.insert_data_into_db(table, columns_list, entries)
 
-    def on_submission2(self, current_tab):
-
+    def on_submission2(self, table, current_tab):
         # Details from tab
         selected_details = {}
+        latest_id = self.database.get_latest_barcode_id(table)
 
         # Create new barcode id
-        details2 = self.next_id(
-            self.database.get_latest_barcode_id(current_tab)
-        )
-        self.set_new_barcode(details2)
+        next_id = self.next_id(latest_id)
+        self.set_new_barcode(next_id)
 
         # QR Code
         details3 = self.get_qr_code_entry()
@@ -241,7 +243,7 @@ class Controller:
         # Page Size
         details4 = "Landscape"  # self.get_page_size()
 
-        selected_details["barcode_input"] = details2
+        selected_details["barcode_input"] = next_id
         selected_details["qr_code_input"] = details3
         selected_details["page_size"] = details4
 
@@ -251,7 +253,7 @@ class Controller:
             selected_precautions = self.get_selected_precautions()
 
         if self.db_insertion:
-            self.add_to_database(current_tab)
+            self.add_to_database(current_tab, next_id)
 
     def get_database_column_names(self, table):
         return self.database.fetch_column_names(table)

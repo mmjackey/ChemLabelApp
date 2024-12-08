@@ -32,12 +32,12 @@ class MyApp2(customtkinter.CTk):
         # Sensitive - Move somewhere else
         self.default_address = "11351 Decimal Drive Louisville, KY 40299"
 
-        self.area_1_frames = []
-
         self.current_tab = None
 
         self.tab_buttons = []
         self.preview_key_details = {}
+
+        self.area_1_frames = []
 
         # Get latest id from chosen inventory type
         default = list(self.table_types)[0]
@@ -233,9 +233,11 @@ class MyApp2(customtkinter.CTk):
     def create_area_frame(self, inventory_type):
         # take inventory type and find the key in 'area_mappings' that corresponds to it.
         value = inventory_type.title()
-        self.area_1.grid_forget()
-        print(value)
+        # keep ref to old frame
+        self.area_1_frames.append(self.area_1)
+
         self.area_1 = DetailSelectFrame(self, self.controller, value)
+
         self.area_1.configure(corner_radius=10)
         self.area_1.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
 
@@ -248,7 +250,10 @@ class MyApp2(customtkinter.CTk):
 
     # Not quite there yet
     def on_submit(self):
-        self.controller.on_submission2(self.current_tab)
+        tab_dict = self.controller.retrieve_tab_entries(self.current_tab)
+        table = list(tab_dict.keys())[0]
+
+        self.controller.on_submission2(table, self.current_tab)
 
         # Create new barcode
         self.generate_barcode(self.controller.get_new_barcode())

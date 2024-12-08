@@ -32,6 +32,7 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         # Current tab is accessible from controller class
         if table_columns_dict:
             self.parent.current_tab = "".join(table)
+
         # Store all EntryBox widgets
         self.entry_tables = {
             key: {item: None for item in value}
@@ -39,15 +40,7 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         }
         self.entry_tables["additional"] = {}
 
-        self.controller.add_tab_entries(
-            self.parent.current_tab, self.entry_tables
-        )
-
-        # Refresh product info area
-        for widget in self.parent.area_1_frames:
-            widget.destroy()
-
-        self.parent.area_1_frames.append(self)
+        self.trace_ids = {}
 
         self.area_1_header = customtkinter.CTkLabel(
             self,
@@ -59,6 +52,7 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         max_rows_per_column, row, col = self.add_batch_entries(
             table_columns_dict
         )
+
         # Address Entry
         address_label = customtkinter.CTkLabel(self, text="Address:")
         address_label.grid(row=row, column=col, padx=10, pady=5, sticky="ew")
@@ -66,25 +60,20 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         sv2 = customtkinter.StringVar()
 
         self.entry_strings.append(sv2)
-        sv2.trace(
-            "w",
+        trace = sv2.trace_add(
+            "write",
             lambda *args, name="address", index=row: self.update_key_details(
                 name, index
             ),
         )
 
+        self.trace_ids[trace] = (sv2, "write")
         address_entry = customtkinter.CTkEntry(self, textvariable=sv2)
         address_entry.grid(
             row=row, column=col + 1, padx=10, pady=5, sticky="w"
         )
         # Add address string
         self.entry_tables["additional"]["address"] = address_entry
-
-        # for key, value in self.entry_tables.items():
-        #     for k, v in value.items():
-        #         if "id" in k.lower():
-        #             continue
-        #         print(k, v.get())
 
         self.add_to_db_checkbox(max_rows_per_column)
 
@@ -108,10 +97,10 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         row = 1
         col = 0
         entry_count = 0
+        current_tab = self.parent.current_tab
         for key, v in table.items():
             column_list = table[key]
             formatted_table_columns = self.format_names(column_list)
-            print(key)
             for j, column in enumerate(column_list):
                 if "id" in column.lower() or "hazard" in column.lower():
                     continue
@@ -155,19 +144,22 @@ class DetailSelectFrame(customtkinter.CTkFrame):
                 self.entry_tables[key][column] = entry
 
                 self.entry_strings.append(sv)
-                sv.trace(
-                    "w",
-                    lambda *args, name=column, table=key: self.update_key_details(
-                        name, table
+                trace = sv.trace_add(
+                    "write",
+                    lambda *args, sv=sv, tab=current_tab, name=column, table=key: self.update_key_details(
+                        name, table, tab, sv
                     ),
                 )
+                self.trace_ids[trace] = (sv, "write")
+
                 row += 1
                 entry_count += 1
                 if row >= max_rows_per_column:
                     row = 1
                     col += 2
-        print(self.entry_tables.keys())
-        print(self.entry_tables.values())
+        self.controller.add_tab_entries(
+            self.parent.current_tab, self.entry_tables
+        )
         self.extra_batch_columns(row, col)
         return max_rows_per_column, row, col
 
@@ -185,26 +177,20 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         self.dropdown.grid(row=rows + 2, column=cols, padx=10, pady=5)
         self.dropdown.set("Choose Chemical(s) from Inventory")
 
-    def update_key_details(self, name, table):
+    def update_key_details(self, name, table, tab, sv):
         # Load StringVar object
-        print("current tab is", self.parent.current_tab)
-        tab_dict = self.controller.retrieve_tab_entries(
-            self.parent.current_tab
-        )
-        print(name, table)
-        print(tab_dict.keys())
-        print(tab_dict.values())
-        print(table, name, tab_dict[table][name].get())
-        entry = tab_dict[table][name].get()
         # str_var = self.entry_strings[args[1]]
 
         # self.area_1_entries[entry_name] = str_var.get()
         # self.controller.set_data_entries(entry_name, str_var.get())
+
         if "qr_code" in name.lower():
-            self.controller.set_qr_code_entry(entry)
+            self.controller.set_qr_code_entry(sv.get())
 
         # Set preview text labels
-        self.parent.preview_key_details[name].configure(text=str(f"{entry}"))
+        self.parent.preview_key_details[name].configure(
+            text=str(f"{sv.get()}")
+        )
         #            if key.lower() == "address":
         #                if not self.controller.get_data_entries()[entry]:
         #                    self.parent.preview_key_details[key].configure(
@@ -242,6 +228,13 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         #                    f"{new_key.title()}: {self.controller.get_data_entries()[entry]}"
         #                )
         #            )
+
+    def destroy_traces(self):
+        for trace_id, (var, mode) in self.trace_ids.items():
+            for ti in var.trace_vinfo():
+                var.trace_vdelete(*ti)
+        self.trace_ids.clear()
+        super().destroy()
 
     # Ex: chemical_inventory -> Chemical Inventory
     def format_names(self, names):

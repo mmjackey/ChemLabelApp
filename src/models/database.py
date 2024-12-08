@@ -84,7 +84,6 @@ class Database:
         return table_exists
 
     def get_latest_barcode_id(self, table_type):
-
         if "product" in table_type:
             table_type = "batch_inventory"
 
@@ -92,7 +91,8 @@ class Database:
         sanitized_table_type = table_type.replace(" ", "_").lower()
 
         # Attempt to retrieve the barcode ID
-        print(f"Attempting to retrieve latest {sanitized_table_type} ID...")
+        # implement logging instead of printing
+        # print(f"Attempting to retrieve latest {sanitized_table_type} ID...")
 
         table_exists = self.check_table_exists(sanitized_table_type)
 
@@ -107,7 +107,6 @@ class Database:
 
             latest_id = self.cur.fetchone()
             if latest_id:
-                print(f"Latest {sanitized_table_type} ID retrieved")
                 return latest_id[0]
             else:
                 print(f"No records found in {sanitized_table_type}")
@@ -261,12 +260,53 @@ class Database:
 
         return column_order
 
+    def type_cast_values(self, value, val_type):
+        print(value, val_type)
+        if val_type == "character varying" == "text":
+            return f"'{value}'"
+        if val_type == "real":
+            return value
+
+    def get_column_types(self, table):
+        query = f"""SELECT  column_name, data_type
+        FROM information_schema.columns
+        WHERE table_name = '{table}';"""
+        self.cur.execute(query)
+        vals = self.cur.fetchall()
+        return vals
+
     def insert_data_into_db(self, table, columns, values):
-        query = f"""
-            INSERT INTO {table} ({', '.join(columns)})
-            VALUES ({', '.join(f"{value}" for value in values)})
-            RETURNING *;
-        """
+        col_types = self.get_column_types(table)
+        for i in range(len(values)):
+            self.type_cast_values(values[i], col_types[i][1])
+        if table == "synthesis":
+            exclude_column = "batch_id"
+            id = values[-3]
+            filtered_columns = [
+                col for col in columns if col != exclude_column
+            ]
+            filtered_values = [
+                val
+                for col, val in zip(columns, values)
+                if col != exclude_column
+            ]
+            set_clause = ", ".join(
+                [
+                    f"{column} = {value}"
+                    for column, value in zip(filtered_columns, filtered_values)
+                ]
+            )
+            query = f"""
+                UPDATE {table}
+                SET {set_clause}
+                WHERE batch_id = {id}
+                RETURNING *;"""
+        else:
+            query = f"""
+                INSERT INTO {table} ({', '.join(columns)})
+                VALUES ({', '.join(f"{value}" for value in values)})
+                RETURNING *;
+            """
         print(query)
         self.cur.execute(query)
         self.conn.commit()
