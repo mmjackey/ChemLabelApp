@@ -66,10 +66,6 @@ class Controller:
             self.get_selected_hazards() + self.get_selected_precautions()
         )  # + self.get_diamond_vars()
 
-    # Set chemical/general inventory entries
-    def set_data_entries(self, key, value):
-        self.area_1_entries[key] = value
-
     def set_page_size(self, size):
         self.page_size = size
 
@@ -125,6 +121,9 @@ class Controller:
         tab_entries = self.database.tab_entries
         for table, column in tab_entries[tab].items():
             tab_entries[tab][table].clear()
+
+    def add_tab_specific_column(self, tab, column, value):
+        self.database.tab_entries[tab][column] = value
 
     def add_tab_entries(self, tab, dictionary):
         self.database.tab_entries[tab] = dictionary

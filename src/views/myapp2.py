@@ -118,7 +118,6 @@ class MyApp2(customtkinter.CTk):
     def initialize_tab_buttons(self, table):
         tab_column_index = 1
         for i, key in enumerate(table):
-            print("key is:", key)
             topbar_button = customtkinter.CTkButton(
                 self.topbar_frame,
                 text=key,

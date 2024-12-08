@@ -32,7 +32,6 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         # Current tab is accessible from controller class
         if table_columns_dict:
             self.parent.current_tab = "".join(table)
-
         # Store all EntryBox widgets
         self.entry_tables = {
             key: {item: None for item in value}
@@ -112,7 +111,7 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         for key, v in table.items():
             column_list = table[key]
             formatted_table_columns = self.format_names(column_list)
-
+            print(key)
             for j, column in enumerate(column_list):
                 if "id" in column.lower() or "hazard" in column.lower():
                     continue
@@ -137,21 +136,13 @@ class DetailSelectFrame(customtkinter.CTkFrame):
 
                 sv = customtkinter.StringVar()
 
-                self.entry_strings.append(sv)
-                sv.trace(
-                    "w",
-                    lambda *args, name=formatted_table_columns[
-                        j
-                    ], index=entry_count: self.update_key_details(name, index),
-                )
-
                 # Create the entry for the column
                 entry = customtkinter.CTkEntry(self, textvariable=sv)
 
                 # Insert default SDS
-                if "qr" in formatted_table_columns[j].lower():
+                if column == "qr_code":
                     default_sds = "https://drive.google.com/file/d/1HfsqJG-goraXZHW8OwokIUNG_nVDM_Uz/view"
-                    entry.insert(0, default_sds)
+                    sv.set(default_sds)
                     self.controller.set_qr_code_entry(default_sds)
 
                 entry.grid(
@@ -160,16 +151,23 @@ class DetailSelectFrame(customtkinter.CTkFrame):
 
                 if row == max_rows_per_column - 1:
                     entry.grid(row=row, column=col + 1, padx=10, pady=5)
-
                 # Store the entry widget in a dictionary (self.entry_vars)
                 self.entry_tables[key][column] = entry
 
+                self.entry_strings.append(sv)
+                sv.trace(
+                    "w",
+                    lambda *args, name=column, table=key: self.update_key_details(
+                        name, table
+                    ),
+                )
                 row += 1
                 entry_count += 1
                 if row >= max_rows_per_column:
                     row = 1
                     col += 2
-
+        print(self.entry_tables.keys())
+        print(self.entry_tables.values())
         self.extra_batch_columns(row, col)
         return max_rows_per_column, row, col
 
@@ -187,63 +185,63 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         self.dropdown.grid(row=rows + 2, column=cols, padx=10, pady=5)
         self.dropdown.set("Choose Chemical(s) from Inventory")
 
-    def update_key_details(self, *args):
+    def update_key_details(self, name, table):
         # Load StringVar object
-        entry_name = args[0]
-
-        str_var = self.entry_strings[args[1]]
+        print("current tab is", self.parent.current_tab)
+        tab_dict = self.controller.retrieve_tab_entries(
+            self.parent.current_tab
+        )
+        print(name, table)
+        print(tab_dict.keys())
+        print(tab_dict.values())
+        print(table, name, tab_dict[table][name].get())
+        entry = tab_dict[table][name].get()
+        # str_var = self.entry_strings[args[1]]
 
         # self.area_1_entries[entry_name] = str_var.get()
-        self.controller.set_data_entries(entry_name, str_var.get())
-        if "qr" in entry_name.lower():
-            self.controller.set_qr_code_entry(str_var.get())
-
-        # Do something with the updated value (for now, just print it)
-        # print(f"Entry {args[0]} updated: {str_var.get()}")
+        # self.controller.set_data_entries(entry_name, str_var.get())
+        if "qr_code" in name.lower():
+            self.controller.set_qr_code_entry(entry)
 
         # Set preview text labels
-        for key in self.parent.preview_key_details.keys():
-            for entry in self.controller.get_data_entries().keys():
-                # print(f"Is {key.lower()} equal to {entry.lower()}?")
-                if key.lower().replace("_", " ") in entry.lower():
-
-                    if key.lower() == "address":
-                        if not self.controller.get_data_entries()[entry]:
-                            self.parent.preview_key_details[key].configure(
-                                text=str(f"{self.parent.default_address}")
-                            )
-                        else:
-                            self.parent.preview_key_details[key].configure(
-                                text=str(
-                                    f"{self.controller.get_data_entries()[entry]}"
-                                )
-                            )
-                        continue
-                    new_key = key.replace("_", " ")
-                    if (
-                        "product" in new_key
-                        and self.controller.get_tab_info()[0]
-                        != "general_inventory"
-                    ):
-                        new_key = "chemical name"
-                    self.parent.preview_key_details[key].configure(
-                        text=str(
-                            f"{new_key.title()}: {self.controller.get_data_entries()[entry]}"
-                        )
-                    )
-                if entry.lower() in key.lower().replace("_", " "):
-                    new_key = entry.lower().replace("_", " ")
-                    if (
-                        "product" in new_key
-                        and self.controller.get_tab_info()[0]
-                        != "general_inventory"
-                    ):
-                        new_key = "chemical name"
-                    self.parent.preview_key_details[key].configure(
-                        text=str(
-                            f"{new_key.title()}: {self.controller.get_data_entries()[entry]}"
-                        )
-                    )
+        self.parent.preview_key_details[name].configure(text=str(f"{entry}"))
+        #            if key.lower() == "address":
+        #                if not self.controller.get_data_entries()[entry]:
+        #                    self.parent.preview_key_details[key].configure(
+        #                        text=str(f"{self.parent.default_address}")
+        #                    )
+        #                else:
+        #                    self.parent.preview_key_details[key].configure(
+        #                        text=str(
+        #                            f"{self.controller.get_data_entries()[entry]}"
+        #                        )
+        #                    )
+        #                continue
+        #            new_key = key.replace("_", " ")
+        #            if (
+        #                "product" in new_key
+        #                and self.controller.get_tab_info()[0]
+        #                != "general_inventory"
+        #            ):
+        #                new_key = "chemical name"
+        #            self.parent.preview_key_details[key].configure(
+        #                text=str(
+        #                    f"{new_key.title()}: {self.controller.get_data_entries()[entry]}"
+        #                )
+        #            )
+        #        if entry.lower() in key.lower().replace("_", " "):
+        #            new_key = entry.lower().replace("_", " ")
+        #            if (
+        #                "product" in new_key
+        #                and self.controller.get_tab_info()[0]
+        #                != "general_inventory"
+        #            ):
+        #                new_key = "chemical name"
+        #            self.parent.preview_key_details[key].configure(
+        #                text=str(
+        #                    f"{new_key.title()}: {self.controller.get_data_entries()[entry]}"
+        #                )
+        #            )
 
     # Ex: chemical_inventory -> Chemical Inventory
     def format_names(self, names):
