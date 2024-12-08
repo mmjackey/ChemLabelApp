@@ -281,14 +281,14 @@ class MyApp2(customtkinter.CTk):
         )
         # self.qr_code_label.grid(padx=(0,15))
 
-        self.capture_widget_as_image(
-            self.area_4.preview_label_frame, "../outputs/frame_capture.png"
+        self.capture_widget_as_image(self.area_4.preview_label_frame)
+        self.create_pdf(
+            "widget_capture.png",
         )
-        self.create_pdf("../frame_capture.png", "label_output.pdf")
 
         # Refresh Entry boxes
-        for box in self.area_1.entry_vars.values():
-            box.delete(0, tk.END)
+        # for box in self.area_1.entry_vars.values():
+        #    box.delete(0, tk.END)
 
         print("PDF created successfully!")
         self.controller.set_id_info(
@@ -347,36 +347,10 @@ class MyApp2(customtkinter.CTk):
         new_image.save(filename)
 
     def create_pdf(self, image_path, pdf_filename="output.pdf"):
-        page_width, page_height = landscape(
-            A4
-        )  # A4 landscape size (842.0 x 595.276)
-
-        c = canvas.Canvas(pdf_filename, pagesize=(page_width, page_height))
         img = Image.open(image_path)
-
-        img_width, img_height = img.size
-
-        scale_factor = min(page_width / img_width, page_height / img_height)
-
-        new_width = img_width * scale_factor
-        new_height = img_height * scale_factor
-        x_offset = (page_width - new_width) / 2
-        y_offset = (page_height - new_height) / 2
-        c.drawImage(
-            image_path,
-            x_offset,
-            y_offset + 20,
-            width=new_width * 0.25,
-            height=new_height * 0.25,
-        )
-        c.drawImage(
-            image_path,
-            x_offset + 200,
-            y_offset + 200,
-            width=new_width * 0.5,
-            height=new_height * 0.5,
-        )
-        c.save()
+        if img.mode == "RGBA":
+            img = img.convert("RGB")
+        img.save(pdf_filename)
 
     # Delete later
     def update_printbox(self):
