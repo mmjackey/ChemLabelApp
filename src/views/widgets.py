@@ -118,8 +118,7 @@ class PreviewFrame(customtkinter.CTkFrame):
             self.details_preview_textbox.grid(row=3, column=0, columnspan=1, padx=2, sticky="ew")
             #self.details_preview_textbox.bind("<KeyRelease>", lambda event: self.adjust_font_size(self.details_preview_textbox))
 
-            # Diamonds preview frame
-            self.create_diamonds_frame()
+            
 
             # Hazards/Precautions Textbox
             self.hazards_preview_textbox = customtkinter.CTkTextbox(
@@ -132,6 +131,9 @@ class PreviewFrame(customtkinter.CTkFrame):
             else:
                 self.hazards_preview_textbox.delete("1.0", tk.END)
             
+            # Diamonds preview frame
+            self.create_diamonds_frame()
+
             # Address label
             self.address_label = customtkinter.CTkLabel(
                 self.preview_label_frame, text=self.root.default_address, text_color="black", anchor="w", wraplength=300, fg_color="transparent"
@@ -252,16 +254,16 @@ class PreviewFrame(customtkinter.CTkFrame):
         )
         self.diamonds_preview_frame.place(x=290, y=160)
         self.diamonds_preview_frame.grid_propagate(False)
-        self.diamonds_preview_frame.bind("<Configure>", self.on_diamond_frame_configure)
+        #self.diamonds_preview_frame.bind("<Configure>", self.on_diamond_frame_configure)
     
     def on_diamond_frame_configure(self,event):
         frame_height = self.diamonds_preview_frame.winfo_height()
     
         if frame_height > 1:
-            if self.controller.get_tab_info()[0] != "general_inventory":
-                if frame_height == 270:
-                    self.diamonds_preview_frame.configure(width=120,height=120)
-                    self.root.add_hazard_symbols(self.root.stored_diamonds)
+            # if self.controller.get_tab_info()[0] != "general_inventory":
+            #     if frame_height == 270:
+            #         self.diamonds_preview_frame.configure(width=120,height=120)
+            #         self.root.add_hazard_symbols(self.root.stored_diamonds)
             
             self.diamonds_preview_frame.unbind("<Configure>")
 
@@ -274,10 +276,10 @@ class PreviewFrame(customtkinter.CTkFrame):
         min_width = 35  # Set a minimum width for the image
         num_hazard_labels = len(symbols)
        
-        self.diamonds_preview_frame.configure(height=120)
+        #self.diamonds_preview_frame.configure(height=120)
         #print(self.diamonds_preview_frame.winfo_height())
-        label_width = max(int(180 * (1/num_hazard_labels)) - 5,min_width)
-        label_height = max(int(180 * (1/num_hazard_labels)) - 5,min_width)
+        label_width = max(int(120 * (1/num_hazard_labels)) - 5,min_width)
+        label_height = max(int(120 * (1/num_hazard_labels)) - 5,min_width)
         
         row, col = 0, 0
         max_rows = 3
@@ -293,17 +295,25 @@ class PreviewFrame(customtkinter.CTkFrame):
                 self.diamonds_preview_frame.grid_rowconfigure(r, weight=0, uniform="equal")  # Allows rows to stretch equally
             for c in range(max_cols):
                 self.diamonds_preview_frame.grid_columnconfigure(c, weight=0, uniform="equal")  # Allows columns to stretch equally
+        
         diamonds_dict = self.controller.get_hazard_diamonds_dict()['Diamonds']
         for item in diamonds_dict:
             for i,symbol in enumerate(symbols):
                 #print(f"Does {item[0]} | equal | {symbol}?")
-                if item[0] == symbol:
+                if symbol in item[0]:
+                    # Open the image
                     image = Image.open(item[1])
+                    #print(image.size)
+                    # Resize the image to the desired dimensions
                     resized_image = image.resize((label_width, label_height), Image.LANCZOS)
+                    
+                    # Create the CTkImage object with the resized image (SIZE=(LABEL_WIDTH,LABEL_HEIGHT))
+                    ctk_image = customtkinter.CTkImage(light_image=resized_image, dark_image=resized_image, size=(label_width,label_height))
 
-                    ctk_image = customtkinter.CTkImage(light_image=resized_image, dark_image=resized_image)
-
+                    # Create the CTkLabel with the image
                     hazard_label = customtkinter.CTkLabel(self.diamonds_preview_frame, image=ctk_image, text="")
+                    
+                    # Add the label to the grid, ensure proper expansion with sticky="nsew"
                     hazard_label.grid(row=row, column=col, sticky="nsew")
 
                     col += 1

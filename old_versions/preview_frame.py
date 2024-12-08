@@ -8,7 +8,7 @@ from reportlab.lib.pagesizes import A4, landscape
 from views.hazardprecautionframe2 import HazardPrecautionFrame2
 from views.hazardprecautionframe2 import WarningClassCheckboxes
 
-class PreviewFrame(customtkinter.CTkFrame):
+class PreviewFrame2(customtkinter.CTkFrame):
     def __init__(self, parent, controller, root):
         super().__init__(parent)
 
