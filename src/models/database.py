@@ -1,11 +1,12 @@
 import psycopg2
 import yaml
-
+import os 
+import sys
 
 class Database:
     def __init__(self):
 
-        self.inventory_tables_data = "src/models/database.yaml"
+        self.inventory_tables_data = self.get_path("src/models/database.yaml")
 
         with open(self.inventory_tables_data, "r") as file:
             self.inventory_type_tables = yaml.safe_load(file)[
@@ -27,6 +28,14 @@ class Database:
         )
 
         self.cur = self.conn.cursor()
+
+    def get_path(self, relative_path):
+        if getattr(sys, 'frozen', False):
+            base_path = sys._MEIPASS
+        else:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)
+
 
     def fetch_column_names(self, tables):
         column_names_dict = {}
