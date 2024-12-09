@@ -313,6 +313,7 @@ class MyApp2(customtkinter.CTk):
         file_name = "barcode.png"
         my_code = Code128(input_string, writer=ImageWriter())
         path = self.controller.get_path(file_name)
+        print(path)
         my_code.save(path)  # Save the barcode as "barcode.png"
         self.controller.set_barcode_image(path)
         return path  # Return the file path for later use
