@@ -54,6 +54,7 @@ class PreviewFrame(customtkinter.CTkFrame):
             base_path = sys._MEIPASS
         else:
             base_path = os.path.abspath(".")
+        print(os.path.join(base_path, relative_path))
         return os.path.join(base_path, relative_path)
 
     def update_frame(self, selection):
