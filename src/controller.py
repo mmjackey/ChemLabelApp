@@ -1,3 +1,7 @@
+import os
+import sys
+
+
 class Controller:
     def __init__(self, Database, HazardsPrecautionsData, EntryParser):
         self.view = None
@@ -98,15 +102,22 @@ class Controller:
     def get_id_info(self):
         return self.id_info
 
+    def get_path(self, relative_path):
+        if getattr(sys, "frozen", False):
+            base_path = sys._MEIPASS
+        else:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)
+
     # Change barcode and qr_code images
     def set_barcode_image(self, file_name):
-        self.barcode_png = file_name
+        self.barcode_png = self.get_path(file_name)
 
     def get_barcode_image(self):
         return self.barcode_png
 
     def set_qr_code_image(self, file_name):
-        self.qr_code_png = file_name
+        self.qr_code_png = self.get_path(file_name)
 
     def get_qr_code_image(self):
         return self.qr_code_png
