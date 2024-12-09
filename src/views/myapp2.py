@@ -310,32 +310,24 @@ class MyApp2(customtkinter.CTk):
         self.area_4.update_frame("Landscape")
 
     def generate_barcode(self, input_string):
-        try:
-            file_name = "barcode.png"
-            my_code = Code128(input_string, writer=ImageWriter())
-            path = self.controller.get_path(file_name)
-            my_code.save(path)  # Save the barcode as "barcode.png"
-            self.controller.set_barcode_image(path)
-            return path  # Return the file path for later use
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-            return None
+        file_name = "barcode.png"
+        my_code = Code128(input_string, writer=ImageWriter())
+        path = self.controller.get_path(file_name)
+        my_code.save(path)  # Save the barcode as "barcode.png"
+        self.controller.set_barcode_image(path)
+        return path  # Return the file path for later use
 
     def generate_qr_code(self, input_string):
-        try:
-            qr = qrcode.QRCode(version=1, box_size=10, border=5)
-            qr.add_data(input_string)
-            qr.make(fit=True)
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(input_string)
+        qr.make(fit=True)
 
-            img = qr.make_image(fill_color="black", back_color="white")
-            file_name = "qr_code.png"
-            path = self.controller.get_path(file_name)
-            img.save(path)
-            self.controller.set_qr_code_image(path)
-            return path  # Return the file path for later use
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-            return None
+        img = qr.make_image(fill_color="black", back_color="white")
+        file_name = "qr_code.png"
+        path = self.controller.get_path(file_name)
+        img.save(path)
+        self.controller.set_qr_code_image(path)
+        return path  # Return the file path for later use
 
     def capture_widget_as_image(self, widget, filename="widget_capture.png"):
         # Get the widget's bounding box
