@@ -135,10 +135,10 @@ class PreviewFrame(customtkinter.CTkFrame):
                 sticky="w",
             )
             self.barcode_label_prev.configure(image=self.barcode_photo_prev)
-
+            path = self.get_path("resources/images/qr_code.png")
             # QR Code Preview Label
             self.qr_code_label = self.create_image_label(
-                "resources/images/qr_code.png",
+                path,
                 (80, 80),
                 row=0,
                 column=2,
