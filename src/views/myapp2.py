@@ -311,11 +311,15 @@ class MyApp2(customtkinter.CTk):
 
     def generate_barcode(self, input_string):
         try:
-            file_name = "barcode"
+            file_name = "barcode.png"
             my_code = Code128(input_string, writer=ImageWriter())
-            my_code.save(file_name)  # Save the barcode as "barcode.png"
-            self.controller.set_barcode_image(f"{file_name}.png")
-            return f"{file_name}.png"  # Return the file path for later use
+            my_code.save(
+                self.get_path(file_name)
+            )  # Save the barcode as "barcode.png"
+            self.controller.set_barcode_image(self.get_path("barcode.png"))
+            return self.get_path(
+                "barcode.png"
+            )  # Return the file path for later use
         except Exception as e:
             messagebox.showerror("Error", str(e))
             return None
