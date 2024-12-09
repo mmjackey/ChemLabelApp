@@ -105,7 +105,10 @@ class PDFCreator(ctk.CTkFrame):
 
     def on_button_click(self):
         # This will be called when the button is clicked
-        self.save_to_pdf(self.label_window)
+        result = self.save_to_pdf(self.label_window)
+        if result is not False:
+            self.root.data_process_message(f"Successfully saved to PDF: {result}")
+
 
     def on_label_size_select(self,selected_size):
         index = 0
@@ -383,11 +386,17 @@ class PDFCreator(ctk.CTkFrame):
             case 8: self.sheet_grid = (2,5)
 
         tmp_png = "preview_frame_output.png"
-        self.capture_widget_as_image(frame, tmp_png)
-        self.create_pdf_letter(tmp_png, self.sheet_count, self.sheet_grid,f"label{self.print_count}_letter.pdf")
-        self.create_pdf_a4(tmp_png, self.sheet_count, self.sheet_grid,f"label{self.print_count}_a4.pdf")
-        self.print_count += 1
-        #os.remove(tmp_png)
+        try:
+            self.capture_widget_as_image(frame, tmp_png)
+            self.create_pdf_letter(tmp_png, self.sheet_count, self.sheet_grid,f"label{self.print_count}_letter.pdf")
+            self.create_pdf_a4(tmp_png, self.sheet_count, self.sheet_grid,f"label{self.print_count}_a4.pdf")
+            self.print_count += 1
+            #os.remove(tmp_png)
+            return (f"label{self.print_count}_letter.pdf",f"label{self.print_count}_a4.pdf")
+        except Exception as e:
+            self.root.data_error_message(f"Failed to Save to PDF: {e}")
+            return False
+        
     
     def capture_widget_as_image(self,widget, filename="widget_capture.png"):
         # Get the widget's bounding box
@@ -402,7 +411,7 @@ class PDFCreator(ctk.CTkFrame):
         
 
         new_image.save(filename)
-        print("tmp png created")
+        #print("tmp png created")
     
     def create_pdf_letter(self,image_path, sheet_count, sheet_grid, pdf_filename="output.pdf"):
         page_width, page_height = letter
