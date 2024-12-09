@@ -90,9 +90,11 @@ class MyApp2(customtkinter.CTk):
         )
         self.topbar_frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
+        path = self.controller.get_path(AppConfig.SOFAB_LOGO)
+
         # Topbar - SoFab Logo!
         self.logo_photo = customtkinter.CTkImage(
-            dark_image=Image.open(AppConfig.SOFAB_LOGO), size=(160, 40)
+            dark_image=Image.open(path), size=(160, 40)
         )
         self.logo_label = customtkinter.CTkLabel(
             self.topbar_frame, image=self.logo_photo, text=""

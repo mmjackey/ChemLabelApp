@@ -107,11 +107,11 @@ class Controller:
             base_path = sys._MEIPASS
         else:
             base_path = os.path.abspath(".")
+        print(os.path.join(base_path, relative_path))
         return os.path.join(base_path, relative_path)
 
     # Change barcode and qr_code images
     def set_barcode_image(self, file_name):
-        print(self.get_path(file_name))
         self.barcode_png = self.get_path(file_name)
 
     def get_barcode_image(self):
