@@ -110,7 +110,7 @@ class PreviewFrame(customtkinter.CTkFrame):
                 )
 
             # Logo Label
-            path = self.get_path("/resources/images/sofab_logo2.png")
+            path = self.get_path("resources/images/sofab_logo2.png")
             self.logo_label = self.create_image_label(
                 path,
                 (160, 40),
