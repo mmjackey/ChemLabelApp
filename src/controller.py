@@ -103,6 +103,7 @@ class Controller:
         return self.id_info
 
     def get_path(self, relative_path):
+        print("controller")
         if getattr(sys, "frozen", False):
             base_path = sys._MEIPASS
         else:

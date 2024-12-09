@@ -214,7 +214,6 @@ class PreviewFrame(customtkinter.CTkFrame):
         self, image_path, size, row, column, sticky, padx=(0, 0)
     ):
         image_path = self.get_path(image_path)
-        print(image_path)
         """Helper function to create image labels with custom size."""
         image = Image.open(image_path)
         image_preview = customtkinter.CTkImage(dark_image=image, size=size)
