@@ -1,3 +1,5 @@
+import os
+import sys
 import tkinter as tk
 
 import customtkinter
@@ -46,6 +48,13 @@ class PreviewFrame(customtkinter.CTkFrame):
 
         # Set initial landscape preview
         self.update_frame(self.orientation_option_menu.get())
+
+    def get_path(self, relative_path):
+        if getattr(sys, "frozen", False):
+            base_path = sys._MEIPASS
+        else:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)
 
     def update_frame(self, selection):
         # Clear the current frame contents
@@ -201,6 +210,7 @@ class PreviewFrame(customtkinter.CTkFrame):
     def create_image_label(
         self, image_path, size, row, column, sticky, padx=(0, 0)
     ):
+        image_path = self.get_path(image_path)
         """Helper function to create image labels with custom size."""
         image = Image.open(image_path)
         image_preview = customtkinter.CTkImage(dark_image=image, size=size)
