@@ -58,11 +58,11 @@ class PreviewFrame(customtkinter.CTkFrame):
                 width=420, height=300
             )  # Set landscape dimensions
             #self.root.area_5.text_box.configure(width=400)
-            label = customtkinter.CTkLabel(
-                self.preview_label_frame,
-                text="Landscape Mode",
-                font=("Arial", 16),
-            )
+            # label = customtkinter.CTkLabel(
+            #     self.preview_label_frame,
+            #     text="Landscape Mode",
+            #     font=("Arial", 16),
+            # )
             self.preview_label_frame.grid(
                 row=2, column=0, sticky="nsew", padx=10, pady=10
             )
@@ -104,14 +104,6 @@ class PreviewFrame(customtkinter.CTkFrame):
             # Create and filter table columns based on tab selection
             
             self.add_details(tab)
-            # for table in self.root.table_types:
-            #     if "batch" in tab:
-            #         tab = "product_inventory"
-            #     #print(f"Does {tab.replace("_", " ").lower()} in {table.lower()}?")
-            #     if str(tab).replace("_", " ").lower() in table.lower():
-            #         self.create_table_columns(table, row, max_rows_per_column)
-            #         if row >= max_rows_per_column:
-            #             break
 
             # Key details Textbox
             self.details_preview_textbox = customtkinter.CTkTextbox(
@@ -130,6 +122,8 @@ class PreviewFrame(customtkinter.CTkFrame):
             self.hazards_preview_textbox.bind("<KeyRelease>", lambda event: self.adjust_font_size(self.hazards_preview_textbox))
             if hazards or self.controller.get_tab_info()[0] != "general_inventory":
                 self.hazards_preview_textbox.insert(tk.END, self.root.stored_preview_text)
+                self.hazards_preview_textbox.cget("font").configure(size=self.hazard_preview_font_size)
+                self.hazards_preview_textbox.configure(font=self.hazards_preview_textbox.cget("font"))
             else:
                 self.hazards_preview_textbox.delete("1.0", tk.END)
             
@@ -140,12 +134,14 @@ class PreviewFrame(customtkinter.CTkFrame):
             self.address_label = customtkinter.CTkLabel(
                 self.preview_label_frame, text=self.root.default_address, text_color="black", anchor="w", wraplength=300, fg_color="transparent"
             )
-            self.address_label.grid(row=5, column=0, columnspan=1, padx=5, pady=(0, 25), sticky="ew")
+            self.address_label.grid(row=5, column=0, columnspan=1, padx=5, pady=(10,0), sticky="ew")
+            
+
             self.root.preview_key_details["address"] = self.address_label
 
         self.preview_label_frame.grid_rowconfigure(1, weight=0)
         self.preview_label_frame.grid_columnconfigure(2, weight=1)  # Empty column for spacing
-
+        self.preview_label_frame.grid_rowconfigure(4,weight=1)
         if self.controller.get_tab_info()[0] != "general_inventory":
             self.add_hazard_symbols(self.root.stored_diamonds)
 
@@ -939,6 +935,9 @@ class DetailSelectFrame(customtkinter.CTkFrame):
 
         str_var = self.entry_strings[entry_name]
         
+        if 'address' in entry_name:
+            if not str_var.get():
+                self.entry_strings[entry_name] = self.root.default_address
         #self.area_1_entries[entry_name] = str_var.get()
         
         # Do something with the updated value (for now, just print it)
@@ -982,7 +981,6 @@ class DetailSelectFrame(customtkinter.CTkFrame):
                 if key in self.details_checkboxes:
                     checked.append(key)
        
-        #print(checked)
         preview = self.root.area_4
         details_textbox = preview.details_preview_textbox
         text = ""
@@ -1009,6 +1007,11 @@ class DetailSelectFrame(customtkinter.CTkFrame):
         
         preview.details_preview_textbox.delete("1.0", tk.END)  # Clear the existing text
         preview.details_preview_textbox.insert(tk.END, text)  # Insert the updated text
+    
+    def disable_details_checkboxes(self):
+        for key, val in self.details_string_vars.items():
+            # Set each checkbox value to "off"
+            val.set("off")
     
     def update_entries(self,send_message):
         str_var = self.entry_strings

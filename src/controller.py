@@ -282,7 +282,11 @@ class Controller:
         if user_entries:
             user_entries = self.assort_columns(table, user_entries)
             print(f"Attempting to add user_entries to {table}..")
-            self.database.insert_data_into_db(table, user_entries) # Important - Passes user entries to PostgreSQL
+            entry_attempt = self.database.insert_data_into_db(table, user_entries)
+            if entry_attempt==True: # Important - Passes user entries to PostgreSQL
+                self.view.data_process_message("Success! Entries added to database")
+            else:
+                self.view.data_error_message(f"Data Entry Failure: {entry_attempt}")
         else:
             print(f"No valid entries to insert ({table})")
     
@@ -365,11 +369,9 @@ class Controller:
 
         if self.db_insertion:
             for key in entries:
-                
                 self.add_to_database(key, entries[key])
                 
-                #self.view.data_error_message(conversion)
-                #self.db_insertion = False
+            self.db_insertion = False
 
     def get_database_column_names(self, table):
         return self.database.fetch_column_names(table)

@@ -19,8 +19,12 @@ from barcode.writer import ImageWriter
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.pdfgen import canvas
+from pdf_generator2 import PDFGenerator
 
 from views.widgets import *
+
+from tkinter import Toplevel
+from pdfcreator import PDFCreator
 
 
 # from ttkbootstrap import Style
@@ -37,7 +41,8 @@ class MyApp2(customtkinter.CTk):
 
         self.controller = controller
         self.controller.set_view(self)
-
+        self.pdf_generator = PDFGenerator
+        self.popup_open = False
 
         self.table_types = self.controller.get_item_type_tables()
 
@@ -277,15 +282,44 @@ class MyApp2(customtkinter.CTk):
         self.update_barcode_qr()
         
         # Create png, convert to pdf
-        self.capture_widget_as_image(self.area_4.preview_label_frame, "frame_capture.png")
-        self.create_pdf("frame_capture.png", "label_output.pdf")
-        self.data_process_message("PDF created successfully!")
+
+        self.close_popup()
+        self.create_print_popup()
+        #self.pdf_generator = PDFGenerator(preview,preview.winfo_children())
+        #self.pdf_generator.save_to_pdf2()
+        #self.pdf_generator.export_to_pdf_custom(self,preview,preview.winfo_children())
+        #self.data_process_message("PDF created successfully!")
 
         #Refresh Entry boxes
-        for box in self.area_1.entry_vars.values():
-            box.delete(0, tk.END)
+        # for box in self.area_1.entry_vars.values():
+        #     box.delete(0, tk.END)
         
-        self.area_4.update_frame("Landscape")
+        # self.area_1.disable_details_checkboxes()
+        # self.area_4.update_frame("Landscape")
+    
+    
+    def create_print_popup(self):
+        # Create a new top-level window (popup)
+        self.popup = Toplevel(self.window_frame)
+        self.popup.title("Popup Window")
+        self.popup.geometry("1200x630")
+
+        #self.print_frame = customtkinter.CTkFrame(self.popup, corner_radius=0)
+        #self.print_frame.pack(fill="both", expand=True)  # Center the frame on the popup
+
+        # Choose label size, export to PDF
+        preview = self.area_4.preview_label_frame
+        print_options_frame = PDFCreator(self.popup,preview,preview.winfo_children(),self)
+        print_options_frame.pack(fill="both", expand=True)
+        print_options_frame.load_options()
+        self.popup_open = True
+
+
+    
+    def close_popup(self):
+        if self.popup_open:
+            self.popup.destroy()
+            self.popup_open = False
 
     def update_barcode_qr(self):
         #Create new barcode
@@ -328,38 +362,6 @@ class MyApp2(customtkinter.CTk):
         except Exception as e:
             messagebox.showerror("Error", str(e))
             return None
-    
-    def capture_widget_as_image(self,widget, filename="widget_capture.png"):
-        # Get the widget's bounding box
-        x = widget.winfo_rootx()
-        y = widget.winfo_rooty()
-        width = widget.winfo_width()
-        height = widget.winfo_height()
-
-        img = ImageGrab.grab(bbox=(x, y, (x + width), (y + height)))
-        new_image = img.rotate(-90)
-        new_image = img.convert("RGB")
-        
-
-        new_image.save(filename)
-
-    def create_pdf(self,image_path, pdf_filename="output.pdf"):
-        page_width, page_height = landscape(A4)  # A4 landscape size (842.0 x 595.276)
-
-        c = canvas.Canvas(pdf_filename, pagesize=(page_width, page_height))
-        img = Image.open(image_path)
-        
-        img_width, img_height = img.size
-
-        scale_factor = min(page_width / img_width, page_height / img_height)
-
-        new_width = img_width * scale_factor
-        new_height = img_height * scale_factor
-        x_offset = (page_width - new_width) / 2
-        y_offset = (page_height - new_height) / 2
-        c.drawImage(image_path, x_offset, y_offset+20, width=new_width * 0.25, height=new_height * 0.25)
-        c.drawImage(image_path, x_offset+200, y_offset+200, width=new_width * 0.5, height=new_height * 0.5)
-        c.save()
 
     #Delete later
     def update_printbox(self):

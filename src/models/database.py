@@ -323,7 +323,7 @@ class Database:
         column_order = [row[0] for row in self.cur.fetchall()]
 
         return column_order
-
+    
     def insert_data_into_db(self, table, valid_entries):
         columns = ", ".join(valid_entries.keys())
         values_to_insert = tuple(str(value) if value is not None else None for value in valid_entries.values())
@@ -347,11 +347,12 @@ class Database:
             inserted_dict = dict(zip(column_names, inserted_row))
 
             print("Data inserted successfully.")
-            print(inserted_dict)
-
+            return True
+        
         except Exception as e:
-            print(f"Error inserting data: {e}")
+            error = f"Error inserting data: {e}"
             self.conn.rollback()
+            return error
         finally:
             # self.cur.close()
             # self.conn.close()
