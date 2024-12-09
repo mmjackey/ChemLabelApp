@@ -82,12 +82,12 @@ class PDFCreator(ctk.CTkFrame):
         initial_height = self.mm_to_pixels(74)
         self.label_window.configure(width = initial_width, height= initial_height)
         self.label_window.grid_propagate(False)
+        self.label_window.pack_propagate(False)
         self.label_window.bind("<Button-1>", self.on_click)
         for col in range(4):
             weight = 1 if col < 3 else 0
             self.label_window.grid_columnconfigure(col, weight=weight)
         self.label_window.grid_rowconfigure(1, weight=0)
-        self.label_window.grid_columnconfigure(2, weight=1)  # Empty column for spacing
         self.label_window.grid_rowconfigure(4,weight=1)
 
         close_button = customtkinter.CTkButton(
@@ -150,29 +150,51 @@ class PDFCreator(ctk.CTkFrame):
 
         # Destroy all child widgets first
         self.clear_preview_key_details()
+        self.label_top_items = ctk.CTkFrame(self.label_window,corner_radius=0,fg_color="transparent")
+        self.label_top_items.grid(row=0,column=0)
 
         # Add top images
-        self.logo_label = self.create_image_label(AppConfig.LOGO_PREVIEW, (160 * self.scaling_factor, 40 *self.scaling_factor), row=0, column=0, padx = 5, pady = (0,10), sticky="w")
-        self.barcode_label_prev = self.create_image_label("barcode.png", (60 * self.scaling_factor, 60 * self.scaling_factor), row=0, column=1, padx=0, sticky="e")
+        logo_size = (140,40)
+        barcode_size = 200
+        qr_code_size = 100
+        # self.logo_label = self.create_image_label(
+        #     AppConfig.LOGO_PREVIEW, 
+        #     (logo_size[0] * self.scaling_factor, logo_size[1] *self.scaling_factor), 
+        #     row=0, 
+        #     column=0, 
+        #     padx = 5, 
+        #     pady = (0,10), 
+        #     sticky="w"
+        # )
+        self.barcode_label_prev = self.create_image_label(
+            "barcode.png", 
+            (barcode_size+50 * self.scaling_factor, barcode_size/2 * self.scaling_factor), 
+            row=0, 
+            column=1, 
+            padx=5, 
+            sticky="ew")
         self.qr_code_label = self.create_image_label(
-            "resources/images/qr_code.png", 
-            (80 * self.scaling_factor, 80 * self.scaling_factor), 
+            "qr_code.png", 
+            (qr_code_size * self.scaling_factor, qr_code_size * self.scaling_factor), 
             row=0, 
             column=2, 
             padx=(0, 5),
             sticky="e"
         )
 
+        self.label_top_items.grid_rowconfigure(0,weight=1)
+        self.label_top_items.grid_rowconfigure(1,weight=1)
+
         # Recreate key details preview textbox
         self.d_textbox = customtkinter.CTkTextbox(
             self.label_window, 
             height=100 * t_scaling_factor, 
-            width=275 * self.scaling_factor, 
+            width=250 * self.scaling_factor, 
             fg_color="transparent", 
             text_color="black", 
             wrap="word",
         )
-        self.d_textbox.grid(row=3, column=0, columnspan=1, padx=2, sticky="ew")
+        self.d_textbox.grid(row=3, column=0, padx=2, sticky="w")
 
         text=""
         if self.root.preview_key_details:
@@ -202,12 +224,12 @@ class PDFCreator(ctk.CTkFrame):
         self.h_textbox = customtkinter.CTkTextbox(
             self.label_window,
             height=110 * t_scaling_factor, 
-            width=275 * self.scaling_factor, 
+            width=250 * self.scaling_factor, 
             fg_color="transparent", 
             text_color="black", 
             wrap="word",
         )
-        self.h_textbox.grid(row=4, column=0, columnspan=1, padx=2, sticky="ew")
+        self.h_textbox.grid(row=4, column=0, padx=2, sticky="w")
         if self.root.stored_preview_text:
             self.h_textbox.delete("1.0", tk.END)
             self.h_textbox.insert(tk.END, self.root.stored_preview_text)
@@ -215,7 +237,7 @@ class PDFCreator(ctk.CTkFrame):
             h_t_font = self.h_textbox.cget("font")
             num_selections = len(self.root.stored_preview_text.split(".")) - 1
             if num_selections >= 3:
-                h_scaled_font_size = int((13 - (num_selections // 2)) * self.scaling_factor)  # Reduce font size for every 5 selections
+                h_scaled_font_size = int((9 - (num_selections // 3)) * self.scaling_factor)  # Reduce font size for every 5 selections
                 if h_t_font._size < 4:  # Minimum font size
                     h_scaled_font_size = 4
                 h_t_font.configure(size=h_scaled_font_size)
@@ -248,6 +270,9 @@ class PDFCreator(ctk.CTkFrame):
 
         self.label_window.grid_columnconfigure(1, weight=1)  # Configure column 1 to expand if necessary
         self.label_window.grid_columnconfigure(2, weight=1)
+
+        
+
         # Create the label with the chosen size
         #label = ctk.CTkLabel(self.label_window, text=f"Chemical Label ({label_size})", font=("Arial", label_size))
         #label.pack(pady=50)
@@ -258,8 +283,12 @@ class PDFCreator(ctk.CTkFrame):
     def create_image_label(self, image_path, size, row, column, sticky, padx=(0, 0), pady=(0,0)):
         image = Image.open(image_path)
         image_preview = customtkinter.CTkImage(dark_image=image, size=size)
-        label = customtkinter.CTkLabel(self.label_window, image=image_preview, text="")
-        label.grid(row=row, column=column, padx=padx, pady=pady, sticky=sticky)
+        label = customtkinter.CTkLabel(self.label_top_items, image=image_preview, text="")
+        #label.grid(row=row, column=column, padx=padx, pady=pady, sticky=sticky)
+        if 'qr' in str(image_path):
+            print("move qr code to bottom")
+            label.pack(side="left",padx=padx,pady=pady)
+        else: label.pack(side="left", padx=padx,pady=pady)
         return label
 
     def clear_preview_key_details(self):

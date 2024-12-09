@@ -340,7 +340,19 @@ class MyApp2(customtkinter.CTk):
     def generate_barcode(self,input_string):
         try:
             file_name = "barcode"
+
+
             my_code = Code128(input_string, writer=ImageWriter())
+
+            # options = {
+            #     'quiet_zone': 6.5,
+            #     'dpi':600,
+            #     'module_width':30,
+            #     'module_height':10,
+            #     'write_text': True,
+            #     'font_size': 25,
+            # }
+
             my_code.save(file_name)  # Save the barcode as "barcode.png"
             self.controller.set_barcode_image(f"{file_name}.png")
             return f"{file_name}.png"  # Return the file path for later use
