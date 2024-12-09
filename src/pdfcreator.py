@@ -74,7 +74,7 @@ class PDFCreator(ctk.CTkFrame):
 
         self.label_window = customtkinter.CTkFrame(
                     self,
-                    fg_color="#FAF9F6", 
+                    fg_color="white", 
                     corner_radius=0
         )  # Create a frame to hold the generated label
         self.label_window.grid(row=2, column=2, sticky="w", padx=10, pady=10)
@@ -194,7 +194,7 @@ class PDFCreator(ctk.CTkFrame):
                     d_scaled_font_size = 4
                 d_t_font.configure(size=d_scaled_font_size)
                 self.d_textbox.configure(font=d_t_font)
-                print(f"(Print Screen Details Box) New Font Size: {d_scaled_font_size}")
+                #print(f"(Print Screen Details Box) New Font Size: {d_scaled_font_size}")
 
 
 
@@ -220,7 +220,7 @@ class PDFCreator(ctk.CTkFrame):
                     h_scaled_font_size = 4
                 h_t_font.configure(size=h_scaled_font_size)
                 self.h_textbox.configure(font=h_t_font)
-                print(f"(Print Screen Hazards Box) New Font Size: {h_scaled_font_size}")
+                #print(f"(Print Screen Hazards Box) New Font Size: {h_scaled_font_size}")
         
         
         
@@ -388,8 +388,9 @@ class PDFCreator(ctk.CTkFrame):
         tmp_png = "preview_frame_output.png"
         try:
             self.capture_widget_as_image(frame, tmp_png)
-            self.create_pdf_letter(tmp_png, self.sheet_count, self.sheet_grid,f"label{self.print_count}_letter.pdf")
-            self.create_pdf_a4(tmp_png, self.sheet_count, self.sheet_grid,f"label{self.print_count}_a4.pdf")
+            #self.create_pdf_letter(tmp_png, self.sheet_count, self.sheet_grid,f"label{self.print_count}_letter.pdf")
+            #self.create_pdf_a4(tmp_png, self.sheet_count, self.sheet_grid,f"label{self.print_count}_a4.pdf")
+            self.capture_widget_as_pdf(frame)
             self.print_count += 1
             #os.remove(tmp_png)
             return (f"label{self.print_count}_letter.pdf",f"label{self.print_count}_a4.pdf")
@@ -413,6 +414,39 @@ class PDFCreator(ctk.CTkFrame):
         new_image.save(filename)
         #print("tmp png created")
     
+    def capture_widget_as_pdf(self, widget, pdf_filename="widget_capture.pdf"):
+        x = widget.winfo_rootx()
+        y = widget.winfo_rooty()
+        width = widget.winfo_width()
+        height = widget.winfo_height()
+
+        img = ImageGrab.grab(bbox=(x, y, x + width, y + height))
+        img = img.convert("RGB")
+
+        img_width, img_height = img.size
+
+        #page_width, page_height = landscape(A4)  # Landscape A4 size (842.0 x 595.276)
+        page_width, page_height = (152.4,101.6)
+
+        c = canvas.Canvas(pdf_filename, pagesize=(page_width, page_height))
+
+        scale_factor_width = page_width / img_width
+        scale_factor_height = page_height / img_height
+
+        scale_factor = min(scale_factor_width, scale_factor_height)
+
+        new_width = img_width * scale_factor
+        new_height = img_height * scale_factor
+
+        x_offset = (page_width - new_width) / 2
+        y_offset = (page_height - new_height) / 2
+
+        img.save("temp_widget_image.png")
+        c.drawImage("temp_widget_image.png", x_offset, y_offset, width=new_width, height=new_height)
+        c.save()
+
+        os.remove("temp_widget_image.png")
+
     def create_pdf_letter(self,image_path, sheet_count, sheet_grid, pdf_filename="output.pdf"):
         page_width, page_height = letter
 
@@ -493,3 +527,4 @@ class PDFCreator(ctk.CTkFrame):
             c.drawImage(image_path, x_offset, y_offset, width=new_width, height=new_height)
 
         c.save()
+    
