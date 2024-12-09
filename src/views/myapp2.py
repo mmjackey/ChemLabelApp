@@ -313,13 +313,10 @@ class MyApp2(customtkinter.CTk):
         try:
             file_name = "barcode.png"
             my_code = Code128(input_string, writer=ImageWriter())
-            my_code.save(
-                self.get_path(file_name)
-            )  # Save the barcode as "barcode.png"
-            self.controller.set_barcode_image(self.get_path("barcode.png"))
-            return self.get_path(
-                "barcode.png"
-            )  # Return the file path for later use
+            path = self.controller.get_path(file_name)
+            my_code.save(path)  # Save the barcode as "barcode.png"
+            self.controller.set_barcode_image(path)
+            return path  # Return the file path for later use
         except Exception as e:
             messagebox.showerror("Error", str(e))
             return None
@@ -331,10 +328,11 @@ class MyApp2(customtkinter.CTk):
             qr.make(fit=True)
 
             img = qr.make_image(fill_color="black", back_color="white")
-            file_name = "qr_code"
-            img.save(f"{file_name}.png")
-            self.controller.set_qr_code_image(f"{file_name}.png")
-            return f"{file_name}.png"  # Return the file path for later use
+            file_name = "qr_code.png"
+            path = self.controller.get_path(file_name)
+            img.save(path)
+            self.controller.set_qr_code_image(path)
+            return path  # Return the file path for later use
         except Exception as e:
             messagebox.showerror("Error", str(e))
             return None
