@@ -119,9 +119,11 @@ class PreviewFrame(customtkinter.CTkFrame):
                 sticky="w",
             )
 
+            path = self.get_path(AppConfig.BARCODE)
+
             # Barcode Preview Label
             self.barcode_photo_prev = customtkinter.CTkImage(
-                dark_image=Image.open(AppConfig.BARCODE), size=(60, 60)
+                dark_image=Image.open(path), size=(60, 60)
             )
             self.barcode_label_prev = self.create_image_label(
                 "barcode.png",
