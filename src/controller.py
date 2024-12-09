@@ -111,6 +111,7 @@ class Controller:
 
     # Change barcode and qr_code images
     def set_barcode_image(self, file_name):
+        print(self.get_path(file_name))
         self.barcode_png = self.get_path(file_name)
 
     def get_barcode_image(self):
