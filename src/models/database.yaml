@@ -1,0 +1,16 @@
+INVENTORY_TYPES:
+  "Chemical Inventory":
+    - "chemical_details"
+    - "chemical_inventory"
+  "General Inventory":
+    - "general_inventory"
+    - "general_product"
+  "Product Inventory (Batch Process)":
+    - "batch_inventory"
+    - "synthesis"
+    - "washing"
+    - "drying"
+    - "functionalization"
+    - "quality_control"
+    - "shipping"
+
